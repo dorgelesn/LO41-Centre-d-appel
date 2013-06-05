@@ -23,37 +23,22 @@
 
 #define NBAGENT 5
 
-//creation d'une file de message par agent
-
 
 //mémoire partagé pour le nombre de client
 int *shNbClients;//adresse d'atachement
 int shId;
-int shIdCli1;
-int shIdCli2;
-int shIdCli3;
-int shIdCli4;
+int shIdCli;
+
 
 
 //mémoire partagé pour le nombre de client
-struct Client *shCli1;//adresse d'atachement
-struct Client *shCli2;//adresse d'atachement
-struct Client *shCli3;//adresse d'atachement
+struct Client *shCli;//adresse d'atachement
 
-
-//file de message pour stocker les clients
-//struct FileAttente fileAttCli;
-int mqIDcli1, cli2, cli3;
-//int msgid1,msgid2,msgid3,msgid4,msgid5,msgid6;
-//int msgidNbCLient;
 
 #define mainPid getpid()
 
 #define KEY 123
 
-
-
-//la file d'attente va être utilisé par file de message
 
 //files
 #include "agent.h"
@@ -63,7 +48,6 @@ int mqIDcli1, cli2, cli3;
 void fileAttenteAdd(struct FileAttente file, struct Client cli)
 {
     
-    // file = malloc(sizeof(struct Client));
     file.listeClient[file.size+1]=cli;
     file.size++;
     printf("size lol %d \n",file.size);
@@ -74,14 +58,8 @@ void fileAttenteAdd(struct FileAttente file, struct Client cli)
 void supAllProc()
 {
     shmctl(shId,IPC_RMID , NULL);
-    shmctl(shIdCli1,IPC_RMID , NULL);
-    shmctl(shIdCli2,IPC_RMID , NULL);
-    shmctl(shIdCli3,IPC_RMID , NULL);
-    
-    
-    msgctl(mqIDcli1, IPC_RMID, NULL);
-    msgctl(cli2, IPC_RMID, NULL);
-    msgctl(cli3, IPC_RMID, NULL);
+    shmctl(shIdCli,IPC_RMID , NULL);
+
     
     kill(mainPid, SIGKILL);
 }
@@ -99,46 +77,10 @@ int main(int argc, const char * argv[])
 		perror("shmget");
 	}
     
-    if ((shIdCli1 = shmget(KEY, sizeof(int), 0777 | IPC_CREAT)) < 0)
+    if ((shIdCli = shmget(KEY, sizeof(int), 0777 | IPC_CREAT)) < 0)
     {
         perror("shmget");
     }
-    
-    
-    if ((shIdCli2 = shmget(KEY, sizeof(int), 0777 | IPC_CREAT)) < 0)
-    {
-        perror("shmget");
-    }
-    
-    
-       if ((shIdCli3 = shmget(KEY, sizeof(int), 0666 | IPC_CREAT)) < 0)
-	{
-		perror("shmget");
-	}
-    
-    if ((shIdCli4 = shmget(KEY, sizeof(int), 0666 | IPC_CREAT)) < 0)
-	{
-		perror("shmget");
-	}
-    
-    
-    int nbCli =0;
-    
-    
-    int sema;
-    struct sembuf sem[2];
-    
-    sem[0].sem_num=0;
-    sem[0].sem_op=1;
-    
-    //sem[1].sem_num=1;
-    //sem[1].sem_op=1;
-    //   semop(sema,sem,1);
-    
-    //predre ressource
-    //  sem[0].sem_num=0;
-    // sem[0].sem_op=-1;
-    //semop(sema,sem,0);
     
     /*#######################################
      # Signal de creation de client (Ctrl+C #
@@ -188,17 +130,6 @@ int main(int argc, const char * argv[])
     /*-------------------------------------------------------------*/
     
     
-    
-    /* int i;
-     for(i=0; i<NBAGENT;++i)
-     tabAgent[i]=ag;*+
-     
-     
-     /* int idx=0;
-     for(idx=0; idx<NBAGENT;++idx)
-     waitpid(tabAgent[idx].numero,NULL,NULL);*/
-    
-    
     printf("pid : %d \n", getpid());
     lireAgent(&ag);
     
@@ -224,84 +155,64 @@ void sigCreaCli(struct Client pClient)
     if((fork()==0)&&(getpid()==mainPid))
     {
         
+        int j;
         if((shNbClients = shmat (shId,shNbClients ,0))==(int *) -1)
         {
             perror("pb shmataa");
         }
         
-        shNbClients[0]++;
+        if((shCli = shmat (shIdCli,(void *)0,0))==(int *) -1)
+        {
+            perror("pb shmataa");
+        }
         
+        //shNbClients[0]++;
+        int forSwitch = shNbClients[0]+1;
         printf("nb client:  %d \n",shNbClients[0]);
-        switch (shNbClients[0]){
+        switch (forSwitch){
             case 1:
-                if((shCli1 = shmat (shIdCli1,(void *)0,0))==(int *) -1)
-                {
-                    perror("pb shmataa");
-                }
-                shCli1[0].probleme=(rand() % 3) + 0;
-                shCli1[0].langue=(rand() % 2) + 0;
-                shCli1[0].numero=getpid();
-                printf("Le client  : %d vient d'arriver  \n",shCli1[0].numero);
-                if(shmdt (shCli1)==(int *) -1)
-                    perror("pb shmat1");
-                break;
-            case 2:
-                
-                if((shCli2 = shmat (shIdCli2,shCli2,0))==(int *) -1)
-                {
-                    perror("pb shmat2");
-                }
-                shCli2[0].probleme=(rand() % 3) + 0;
-                shCli2[0].langue=(rand() % 2) + 0;
-                shCli2[0].numero=getpid();
-
-                printf("Le client  : %d vient d'arriver  \n",shCli2[0].numero);
-
-                if(shmdt (shCli2)==(int *) -1)
-                {
-                    perror("pb shmatii");
-                }
-                
-                if((shCli1 = shmat (shIdCli1,shCli1,0))==(int *) -1)
-                    perror("pb shmatabbbb");
-                
-                printf("Le client  : %d vient d'arriver  \n",shCli2[0].numero);
-                
-                printf("le Client précedent est :  %d \n", shCli1[0].numero);
-
-                
-                if(shmdt (shCli1)==(int *) -1)
-                    perror("pb shmatii");
-    
+                shCli[1].probleme=(rand() % 3) + 0;
+                shCli[1].langue=(rand() % 2) + 0;
+                shCli[1].numero=getpid();
+                printf("Le client  : %d vient d'arriver  \n",shCli[1].numero);
                 shNbClients[0]++;
                 break;
-          //  case 3:
-             /*   if((shCli3 = shmat (shId,shCli3,0))==(int *) -1)
-                {
-                    perror("pb shmataa");
-                }
-                shCli3[0].probleme=(rand() % 3) + 0;
-                shCli3[0].langue=(rand() % 2) + 0;
-                shCli3[0].numero=getpid();
-                printf("Le client  : %d vient d'arriver  \n",shCli3->numero);
-                break;*/
-            default:
-                /*   if((shCli1 = shmat (shId,(void *)0,0))==(int *) -1)
-                 {
-                 perror("pb shmataa");
-                 }*/
-                //printf("CLI :  %d \n", shCli1[0].numero);
-                printf("dans default \n");
-                //affichageClient(&cliAff);
+            case 2:
+                shCli[2].probleme=(rand() % 3) + 0;
+                shCli[2].langue=(rand() % 2) + 0;
+                shCli[2].numero=getpid();
+                printf("Le client  precedant est : %d \n",shCli[1].numero);
+                printf("Le client  : %d vient d'arriver  \n",shCli[2].numero);
+                shNbClients[0]++;
+                break;
+            case 3:
+                shCli[3].probleme=(rand() % 3) + 0;
+                shCli[3].langue=(rand() % 2) + 0;
+                shCli[3].numero=getpid();
+                printf("Le client  : %d vient d'arriver  \n",shCli[3].numero);
+                shNbClients[0]++;
+                break;
 
+            default:
+                for(j=1; j<=shNbClients[0];++j)
+                    printf("Actuelement en file d'attente : %d  \n",shCli[j].numero);
+                shNbClients[0]++;
                 break;
         }
+        
 
-        printf("dans signal ctr c \n ");
+        //détachement mémoire partagée nombre de clients
         if(shmdt (shNbClients)==(int *) -1)
         {
             perror("pb shmataa");
         }
+        
+        //détachement mémoire partagée des clients
+        if(shmdt (shCli)==(int *) -1)
+        {
+            perror("pb shmataa");
+        }
+        
         signal(SIGINT,sigDeSig);
         
         
