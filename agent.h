@@ -9,6 +9,7 @@
 #ifndef LO41_Projet_agent_h
 #define LO41_Projet_agent_h
 #include <stdio.h>
+#include "client.h"
 
 struct Agent
 {
@@ -32,8 +33,10 @@ struct Agent
     
 };
 
-//fonction pour thread
+
 void lireAgent(struct Agent *ag);
+
+int traitementClient(struct Agent ag[6], struct Client *cli);
 
 
 #endif

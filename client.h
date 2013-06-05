@@ -12,7 +12,6 @@
 
 struct Client
 {
-
     /*------GROUPE-----*/
     //0 => technique
     //1 => commercial abonnement (prioritaire
@@ -23,6 +22,9 @@ struct Client
     //pid du processus
     pid_t numero;
     
+    //temps necessaire
+    int tempsAppel;
+    
     /*-----Langue----*/
     //0 => francais
     //1 => anglais
@@ -30,7 +32,6 @@ struct Client
     /*---------------*/
     
     int rang;
-
 };
 
 //fonction pour thread

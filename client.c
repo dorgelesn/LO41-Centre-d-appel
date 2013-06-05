@@ -33,6 +33,9 @@ void affichageClient(struct Client *cli)
     /*----Pour affichage----*/
     
     fflush(NULL);//libération buffer pour affichage
+    printf("++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
     printf("Client %d parlant %s, avec le probléme : %s \n", getpid(), langu, pb);
+    printf("temps necessaire : %d \n", cli->tempsAppel);
+    printf("++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
     
 }
