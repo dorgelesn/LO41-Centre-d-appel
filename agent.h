@@ -9,10 +9,18 @@
 #ifndef LO41_Projet_agent_h
 #define LO41_Projet_agent_h
 #include <stdio.h>
-#include "client.h"
+#include <sys/shm.h>
 
+//files
+#include "client.h"
+#include "fileAttente.h"
+#include"semaphore.h"
+
+#define KEYNBCLIENFILE 4321
+#define KEYCLIENFILE 321
 struct Agent
 {
+
 
     /*------GROUPE-----*/
     //0 => technique
@@ -33,9 +41,20 @@ struct Agent
     
 };
 
+//Variables
+int ressourceProc;
+/*---mémoire partagé pour les client en file d'attente---*/
+//Nombre de clients
+int *shNbCliEnFile;
+int shIdNbCliEnFile;
 
+//Le client en lui même
+int shIdCliEnFile;
+struct Client *shCliEnFile;
+/*------------------------------------*/
+
+//Fontions
 void lireAgent(struct Agent *ag);
-
 int traitementClient(struct Agent ag[6], struct Client *cli);
 
 

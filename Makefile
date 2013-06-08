@@ -1,7 +1,7 @@
 CC=gcc
 CFLAGS=-c -Wall
 LDFLAGS=
-SOURCES=main.c client.c agent.c
+SOURCES=main.c client.c agent.c semaphore.c
 OBJECTS=$(SOURCES:.c=.o)
 EXECUTABLE=projet
 

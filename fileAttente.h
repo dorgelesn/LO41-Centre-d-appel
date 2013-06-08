@@ -17,10 +17,7 @@ struct FileAttente
 };
 
 void fileAttenteAdd(struct FileAttente file, struct Client cli);
-
 void fileAttenteDel(struct FileAttente file, int i);
-
-
 void affichageFileAttente(struct FileAttente file);
 
 #endif

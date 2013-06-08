@@ -14,7 +14,6 @@ void affichageClient(struct Client *cli)
 
     char* pb;
     char* langu;
-    int pid;
     
     /*----Pour affichage----*/
     if(cli->langue==0)
