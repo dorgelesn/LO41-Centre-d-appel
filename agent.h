@@ -10,7 +10,8 @@
 #define LO41_Projet_agent_h
 #include <stdio.h>
 #include <sys/shm.h>
-
+#include <sys/types.h>
+#include <signal.h>
 //files
 #include "client.h"
 #include "fileAttente.h"
@@ -54,7 +55,7 @@ struct Client *shCliEnFile;
 /*------------------------------------*/
 
 //Fontions
-void lireAgent(struct Agent *ag);
+void lireAgent(struct Agent ag, int nbAg);
 int traitementClient(struct Agent ag[6], struct Client *cli);
 
 

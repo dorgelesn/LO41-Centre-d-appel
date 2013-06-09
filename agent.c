@@ -7,25 +7,31 @@
 //
 #include "agent.h"
 
-void lireAgent(struct Agent *ag)
+void lireAgent(struct Agent ag, int nbAg)
 {
     
     char* grp;
     char* langu;
+    int i;
+    printf("NBAAG : %d \n ", nbAg);
+  //  for(i=0; i<nbAg;++i)
+   // {
     /*----Pour affichage----*/
-    if(ag->langue==0)
+    if(ag.langue==0)
         langu="Français";
-    else if (ag->langue==2)
+    else if (ag.langue==1)
         langu="Anglais";
-    else
-        langu="Français/Anglais";
+    else 
+        langu="Anglais/Fançais";
+
+    printf("LANGUE %d \n", ag.langue);
+    printf("GROUPE %d \n", ag.groupe);
     
-    if(ag->groupe==0)
+    if(ag.groupe==0)
         grp="Technicien";
     else
         grp="Commercial";
     /*----Pour affichage----*/
-    
     
     fflush(NULL);
     
@@ -33,8 +39,10 @@ void lireAgent(struct Agent *ag)
     
     fflush(NULL);//libération buffer pour affichage
     printf("|--------------------------------------------| \n");
-    printf("| Operateur %d                              \n", getpid());
-    printf("| %s parant %s                \n", grp,langu);
+    fflush(NULL);//libération buffer pour affichage
+    printf("| Agent %d                              \n", getpid());
+    fflush(NULL);//libération buffer pour affichage
+    printf("| %s parlant %s                \n", grp,langu);
     printf("|                                            | \n");
     printf("|                                            | \n");
     printf("|                                            | \n");
@@ -42,6 +50,7 @@ void lireAgent(struct Agent *ag)
     printf("\n");
     
     fflush(NULL);//libération buffer pour affichage
+    //}
 }
 
 int traitementClient(struct Agent ag[6], struct Client *cli)
@@ -70,15 +79,16 @@ int traitementClient(struct Agent ag[6], struct Client *cli)
             printf("Le client %d est traité par l'agent %d \n ", cli->numero, ag->numero);
             
             /*----bloquer l'agent pour le temps d'attente...*/
-            printf("Le client %d est entrain d'être traité par l'agent %d \n",cli->numero,ag[i].numero);
 
-            P(ressourceProc);
+
+            P(ressourceProc);//on prend la ressource du processus
             printf("Le client %d est entrain d'être traité par l'agent %d \n",cli->numero,ag[i].numero);
             sleep(cli->tempsAppel);
+            printf("Le client %d à finie d'être traité par l'agent %d  !! \n",cli->numero,ag[i].numero);
             V(ressourceProc);
             
             /*--Tuer le processus processus client et débloquer l'agent une fois le temps passé..*/
-            // ...
+            kill(cli->numero,SIGKILL);
             
             return 1;
         }
