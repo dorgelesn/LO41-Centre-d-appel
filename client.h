@@ -14,7 +14,7 @@ struct Client
 {
     /*------GROUPE-----*/
     //0 => technique
-    //1 => commercial abonnement (prioritaire
+    //1 => commercial abonnement (prioritaire)
     //2 => commercial autre
     int probleme;
     /*----------------*/

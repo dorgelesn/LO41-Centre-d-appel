@@ -11,6 +11,8 @@
 #include <stdio.h>
 #include <sys/shm.h>
 #include <sys/types.h>
+#include <sys/msg.h>
+
 #include <signal.h>
 //files
 #include "client.h"
@@ -56,7 +58,6 @@ struct Client *shCliEnFile;
 
 //Fontions
 void lireAgent(struct Agent ag, int nbAg);
-int traitementClient(struct Agent ag[6], struct Client *cli);
-
+int traitementClient(struct Agent *ag, struct Client *cli);
 
 #endif
