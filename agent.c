@@ -7,110 +7,65 @@
 //
 #include "agent.h"
 
-void lireAgent(struct Agent ag, int nbAg)
+void lireAgent()
 {
     
     char* grp;
     char* langu;
     int i;
-    printf("NBAAG : %d \n ", nbAg);
-  //  for(i=0; i<nbAg;++i)
-   // {
-    /*----Pour affichage----*/
-    if(ag.langue==0)
-        langu="Français";
-    else if (ag.langue==1)
-        langu="Anglais";
-    else 
-        langu="Anglais/Fançais";
-
-    printf("LANGUE %d \n", ag.langue);
-    printf("GROUPE %d \n", ag.groupe);
     
-    if(ag.groupe==0)
-        grp="Technicien";
-    else
-        grp="Commercial";
-    /*----Pour affichage----*/
-    
-    fflush(NULL);
-    
-    //printf("Operateur %d parlant %s, dans le goupe %s \n", getpid(), langu, grp);
-    
-    fflush(NULL);//libération buffer pour affichage
-    printf("|--------------------------------------------| \n");
-    fflush(NULL);//libération buffer pour affichage
-    printf("| Agent %d                              \n", getpid());
-    fflush(NULL);//libération buffer pour affichage
-    printf("| %s parlant %s                \n", grp,langu);
-    printf("|                                            | \n");
-    printf("|                                            | \n");
-    printf("|                                            | \n");
-    printf("|============================================| \n");
-    printf("\n");
-    
-    fflush(NULL);//libération buffer pour affichage
-    //}
-}
-lireAgent2(int shIdAgent)
-{
     int id;
-    void* ptr_mem_partagee_B[6];
-
-    struct Agent ag;
+    void* addrShAgent[6];
+    
+    //struct Agent ag;
     
     if ((id = shmget(1234, sizeof(struct Agent), 0777 | IPC_CREAT)) < 0)
         perror("shmget dans agent");
-    if ((*ptr_mem_partagee_B = shmat(id, (void*)0, 0)) == (void*) -1)
-	{
-		perror("shmat dans agent");
-        exit(1);
-	}
-    char* grp;
-    char* langu;
-    int i;
+    if((*addrShAgent = shmat (id,(void *)0,0))==(int *) -1)
+        perror("pb shmataa");
     
-    //  for(i=0; i<nbAg;++i)
-    // {
+     
+ //   printf("NBAAG : %d \n ", nbAg);
+    for(i=0; i<5;++i)
+    {
+        printf("dans lire agent %d  \n", i);
+
     /*----Pour affichage----*/
-  /*  if(ag.langue==0)
+ /*   if(((struct Agent **)addrShAgent)[i]->langue==0)
         langu="Français";
-    else if (ag.langue==1)
+    else if (((struct Agent **)addrShAgent)[i]->langue==1)
         langu="Anglais";
-    else
+    else 
         langu="Anglais/Fançais";*/
 
-//    printf("LANGUE %d \n", ((struct Agent**)ptr_mem_partagee_B)[0]->langue);
-    printf("PID DE AGENT %d \n", ((struct Agent **)ptr_mem_partagee_B)[0]->numero);
-  //  printf("GROUPE %d \n",  ((struct Agent**)ptr_mem_partagee_B)[0]->groupe);
+    printf("NUMERO %d \n",((struct Agent *)addrShAgent+i)->numero);
+  //  printf("GROUPE %d \n", ((struct Agent **)addrShAgent)[i]->langue);
     
- /*   if(ag.groupe==0)
-        grp="Technicien";
-    else
-        grp="Commercial";
-    /*----Pour affichage----*/
+//    if(((struct Agent *)addrShAgent)[i].groupe==0)
+//       grp="Technicien";
+//    else
+//       grp="Commercial";
+//    /*----Pour affichage----*/
+//    
+//    fflush(NULL);
+//    
+//    //printf("Operateur %d parlant %s, dans le goupe %s \n", getpid(), langu, grp);
+//    
+//    fflush(NULL);//libération buffer pour affichage
+//    printf("|--------------------------------------------| \n");
+//    fflush(NULL);//libération buffer pour affichage
+//    printf("| Agent %d                              \n", ((struct Agent **)addrShAgent)[i]->numero);
+//    fflush(NULL);//libération buffer pour affichage
+//    printf("| %s parlant %s                \n", grp,langu);
+//    printf("|                                            | \n");
+//    printf("|                                            | \n");
+//    printf("|                                            | \n");
+//    printf("|============================================| \n");
+//    printf("\n");
     
-    fflush(NULL);
-    
-    //printf("Operateur %d parlant %s, dans le goupe %s \n", getpid(), langu, grp);
-    
-   /* fflush(NULL);//libération buffer pour affichage
-    printf("|--------------------------------------------| \n");
     fflush(NULL);//libération buffer pour affichage
-    printf("| Agent %d                              \n", getpid());
-    fflush(NULL);//libération buffer pour affichage
-    printf("| %s parlant %s                \n", grp,langu);
-    printf("|                                            | \n");
-    printf("|                                            | \n");
-    printf("|                                            | \n");
-    printf("|============================================| \n");
-    printf("\n");
-    
-    fflush(NULL);//libération buffer pour affichage*/
-    //}
-
+    }
 }
-
 
 int traitementClient(struct Agent *ag, struct Client *cli)
 {

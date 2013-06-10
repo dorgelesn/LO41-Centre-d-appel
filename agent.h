@@ -24,7 +24,6 @@
 struct Agent
 {
 
-
     /*------GROUPE-----*/
     //0 => technique
     //1 => commercial
@@ -40,8 +39,7 @@ struct Agent
     //2=> français + anglais
     int langue;
     /*---------------*/
-    
-    
+        
 };
 
 //Variables
@@ -57,7 +55,7 @@ struct Client *shCliEnFile;
 /*------------------------------------*/
 
 //Fontions
-void lireAgent(struct Agent ag, int nbAg);
+void lireAgent();
 int traitementClient(struct Agent *ag, struct Client *cli);
 
 #endif
