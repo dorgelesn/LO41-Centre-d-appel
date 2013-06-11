@@ -24,8 +24,8 @@ void lireAgent()
     if((*addrShAgent = shmat (id,(void *)0,0))==(int *) -1)
         perror("pb shmataa");
     
-     
- //   printf("NBAAG : %d \n ", nbAg);
+
+    //printf("NBAAG : %d \n ", nbAg);
     for(i=0; i<5;++i)
     {
         printf("dans lire agent %d  \n", i);
@@ -37,8 +37,11 @@ void lireAgent()
         langu="Anglais";
     else 
         langu="Anglais/Fançais";*/
+        struct Agent  *ag = (((struct Agent *)addrShAgent));
+        printf("NUMERO %d \n",((struct Agent *)addrShAgent)[i].numero);
+        printf("NUMERO2 %d \n",(ag[i].numero));
 
-    printf("NUMERO %d \n",((struct Agent *)addrShAgent+i)->numero);
+
   //  printf("GROUPE %d \n", ((struct Agent **)addrShAgent)[i]->langue);
     
 //    if(((struct Agent *)addrShAgent)[i].groupe==0)
