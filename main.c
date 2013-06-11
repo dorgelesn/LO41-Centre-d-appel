@@ -22,45 +22,48 @@
 #include <sys/msg.h>
 #include "semaphore.h"
 #include <semaphore.h>
+
+//files
+#include "agent.h"
+#include "client.h"
+#include "fileAttente.h"
 #define NBAGENT 6
 
 #define SEMNOM "SemaphoreCreacli"
-#define SEMNOMATTCL "SemaphoreCreacli2"
-
 
 #define KEYCLI 123
 #define KEYAGENT 1234
 #define KEYMAINPID 3443
 #define KEYNBAGENT 6655
 
+//pour sémaphore d'accès à la mémoire partagée
 int accesSHM=0;
-//int accesApresCrea=0;
 
-/*---mémoire partagé pour stocker pid du processus main--*/
+/*####Mémoire partagé pour stocker pid du processus main##*/
 void *addrPidMainProc;
 int shIdPiddMainProc;
 typedef struct
 {
-	int pid;
+    int pid;
 }strucPidPartage;
-/*------------------------------------------*/
+/*####FIN Mémoire partagé pour stocker pid du processus main##*/
 
-/*---mémoire partagé pour les client---*/
+
+/*#####Mémoire partagé pour les client########*/
 //Nombre de clients
 void *addrShNbClients; //pointeur sur l'adresse d'attachement du segment de mémoire partagée
 int shIdNbCli; // identificateur
 
-
 //Le client en lui même
 int shIdCli;
 struct Client *shCli;
-/*------------------------------------*/
+/*#####FIN Mémoire partagé pour les clien#######*/
 
-/*----mémoire partagé pour les agents----*/
+
+/*#####mémoire partagé pour les agents######*/
 //nombre d'agent
 void *addrShNbAgent;
 int shIdNbAgent;
-
 typedef struct
 {
     int nbAg;
@@ -69,14 +72,8 @@ typedef struct
 //l'agent en lui même
 void *addrShAgent[6];//pointeur sur l'adresse d'attachement du segment de mémoire partagée
 int shIdAgent;
-/*------------------------------------*/
+/*#####FIN mémoire partagé pour les agents######*/
 
-#define mainPid getpid()
-
-//files
-#include "agent.h"
-#include "client.h"
-#include "fileAttente.h"
 
 void fileAttenteAdd(struct FileAttente file, struct Client cli)
 {
@@ -102,21 +99,21 @@ void supAllProc()
     shmctl(shIdAgent, IPC_RMID, NULL);
     shmctl(shIdNbAgent, IPC_RMID, NULL);
     shmctl(shIdPiddMainProc, IPC_RMID, NULL);
-
+    
     int tabSemId;
     key_t cle = ftok(SEMNOM,'0');
     (tabSemId  = semget(cle, 1, IPC_CREAT  | 0600));
     semctl(tabSemId, IPC_RMID, NULL);
     
-    kill(mainPid, SIGKILL);
+    kill(getpid(), SIGKILL);
 }
 
 void sigCreaCli(struct Client pClient);
 
 int main(int argc, const char * argv[])
 {
-
-
+    
+    
     int pvInit[1];
     pvInit[0]=1;
     initSem(1,SEMNOM,pvInit);
@@ -124,10 +121,10 @@ int main(int argc, const char * argv[])
     //pvInit2[0]=1;
     //initSem(1,SEMNOMATTCL,pvInit2);
     //P(accesApresCrea);
-
+    
     
     //(accesApresCrea);
-
+    
     //shNbCliEnFile=0;
     //addrShNbClients=0;
     //addrShNbAgent=0;
@@ -181,298 +178,271 @@ int main(int argc, const char * argv[])
         perror("pb shmataa");
     
     
-   // sNbA.nbAg=0;
-    //*((strucNbAg *)addrShNbAgent)=sNbA ;
-    
-    /*##################################################
-     /*-----création de NB agents (nb processus)----*/
-    
     if ((shIdPiddMainProc = shmget(KEYMAINPID, sizeof(sPP), 0777 | IPC_CREAT)) < 0)
         perror("shmget");
     
     if((addrPidMainProc = shmat (shIdPiddMainProc,(void*)0,0))==(int *) -1)
         perror("pb shmataa");
-
+    
     if(((strucPidPartage*)addrPidMainProc)->pid==getpid())
     {
         //permet de sécuriser l'accès à la mémoire partagé
-      
     }
-
     
+    /*##################################################
+     /*-----création de NB agents (nb processus)----*/
     for (iAg=0; iAg<NBAGENT; ++iAg)
     {
-       // ++iAg;
-
-        //if(((strucPidPartage*)addrPidMainProc)->pid==getpid())
-       // {
-            if(fork()==0)//on est dans le fils
+        
+        if(fork()==0)//on est dans le fils
+        {
+            P(accesSHM);
+            //bloque ctrl+c dans tout les processus fils
+            sigblock(SIGINT);
+            
+            int numberPid = getpid();
+            int lastDigitPid = numberPid%10;
+            
+            if(lastDigitPid==0)
             {
                 
-                P(accesSHM);
-                //bloque ctrl+c dans tout les processus fils
-                sigblock(SIGINT);
+                //recuperer la structure du nombre d'agents
+                strucNbAg nbagents;
+                nbagents = *(strucNbAg *)addrShNbAgent;
+            
+                //recuperer la structure des agents
+                struct Agent *ag = NULL;
+                ag=*(((struct Agent **)addrShAgent));
+                ag[nbagents.nbAg].groupe=0;
+                ag[nbagents.nbAg].langue=1;
+                ag[nbagents.nbAg].numero=getpid();
                 
-                int numberPid = getpid();
-                int lastDigitPid = numberPid%10;
-                //fflush(NULL);
-                              //if(lastDigitPid==0)
-               // {
-                /*void *addrShNbAgent2;
-                int shIdNbAgent2;
-                if ((shIdNbAgent2 = shmget(KEYNBAGENT, sizeof(sNbA), 0777 | IPC_CREAT)) < 0)
-                    perror("shmget shidnbagent");
-                if((addrShNbAgent2 = shmat (shIdNbAgent2,(void*)0,0))==(int *) -1)
-                    perror("pb shmataa");*/
-
-                    struct Agent *ag = NULL;
-                    ag=*(((struct Agent **)addrShAgent));
-                    ag[((strucNbAg *)addrShNbAgent)->nbAg].groupe=0;
-                    ag[((strucNbAg *)addrShNbAgent)->nbAg].langue=1;
-                    ag[((strucNbAg *)addrShNbAgent)->nbAg].numero=getpid();
+                //rétache l'agent
+                (*(struct Agent **)addrShAgent) = ag;
                 
-                    //printf("PID dans crea agent : %d \n ",getpid());
-                    //sNbA2 = *((strucNbAg *)addrShNbAgent);
-             
-                   // printf("nb dans 0 %d : %d \n",getpid(),  sNbA2.nbAg);
+                fflush(NULL);
+            
+                //pour test
+                //  struct Agent *ag2 = NULL;
+                //ag2=*(((struct Agent **)addrShAgent));
+                //printf("NUMERO DANS MAIN %d !!!!!! %d \n",nbagents.nbAg,ag2[nbagents.nbAg].numero);
                 
-                    //rétache la l'agent 
-                    (*(struct Agent **)addrShAgent) = ag;
+                //incrémenter et rattacher le nombre d'agnts
+                nbagents.nbAg++;
+                (*(strucNbAg *)addrShNbAgent)=nbagents;
                 
-
-                    //sNbA2.nbAg=sNbA2.nbAg+1;
-                    //BUGGGG avec ça !
-               // printf(" --addrSHNbAgent :  %d-- \n", &addrShNbAgent);
-
-  //                *((strucNbAg *)addrShNbAgent) = sNbA2;
-                    fflush(NULL);
-
-                    struct Agent *ag2 = NULL;
-                    ag2=*(((struct Agent **)addrShAgent));
                 
-                    printf("NUMERO DANS MAIN %d !!!!!! %d \n",((strucNbAg *)addrShNbAgent)->nbAg,ag2[((strucNbAg *)addrShNbAgent)->nbAg].numero);
-
-                //int i;
-                //for(i=0; i<((strucNbAg *)addrShNbAgent)->nbAg;++i)
-                //sNbA2.nbAg++;
-                
+            }
+            else if(lastDigitPid==1)
+            {
                  
+                //recuperer la structure du nombre d'agents
+                strucNbAg nbagents;
+                nbagents = *(strucNbAg *)addrShNbAgent;
                 
+                //recuperer la structure des agents
+                struct Agent *ag = NULL;
+                ag=*(((struct Agent **)addrShAgent));
+                ag[nbagents.nbAg].groupe=0;
+                ag[nbagents.nbAg].langue=2;
+                ag[nbagents.nbAg].numero=getpid();
+                
+                //rétache l'agent
+                (*(struct Agent **)addrShAgent) = ag;
+            
+                //incrémenter et rattacher le nombre d'agnts
+                nbagents.nbAg++;
+                (*(strucNbAg *)addrShNbAgent)=nbagents;
+                
+            }
+            else  if(lastDigitPid==2)
+            {
+                //recuperer la structure du nombre d'agents
+                strucNbAg nbagents;
+                nbagents = *(strucNbAg *)addrShNbAgent;
+                
+                //recuperer la structure des agents
+                struct Agent *ag = NULL;
+                ag=*(((struct Agent **)addrShAgent));
+                ag[nbagents.nbAg].groupe=0;
+                ag[nbagents.nbAg].langue=0;
+                ag[nbagents.nbAg].numero=getpid();
+                
+                //rétache l'agent
+                (*(struct Agent **)addrShAgent) = ag;
+                
+                //incrémenter et rattacher le nombre d'agnts
+                nbagents.nbAg++;
+                (*(strucNbAg *)addrShNbAgent)=nbagents;
+      
+                
+            }
+            else  if(lastDigitPid==3)
+            {
+                //recuperer la structure du nombre d'agents
+                strucNbAg nbagents;
+                nbagents = *(strucNbAg *)addrShNbAgent;
+                
+                //recuperer la structure des agents
+                struct Agent *ag = NULL;
+                ag=*(((struct Agent **)addrShAgent));
+                ag[nbagents.nbAg].groupe=1;
+                ag[nbagents.nbAg].langue=1;
+                ag[nbagents.nbAg].numero=getpid();
+                
+                //rétache l'agent
+                (*(struct Agent **)addrShAgent) = ag;
+                
+                //incrémenter et rattacher le nombre d'agnts
+                nbagents.nbAg++;
+                (*(strucNbAg *)addrShNbAgent)=nbagents;
+         
+            }
+            else if(lastDigitPid==4)
+            {
+                //recuperer la structure du nombre d'agents
+                strucNbAg nbagents;
+                nbagents = *(strucNbAg *)addrShNbAgent;
+                
+                //recuperer la structure des agents
+                struct Agent *ag = NULL;
+                ag=*(((struct Agent **)addrShAgent));
+                ag[nbagents.nbAg].groupe=1;
+                ag[nbagents.nbAg].langue=2;
+                ag[nbagents.nbAg].numero=getpid();
+                
+                //rétache l'agent
+                (*(struct Agent **)addrShAgent) = ag;
+                
+                //incrémenter et rattacher le nombre d'agnts
+                nbagents.nbAg++;
+                (*(strucNbAg *)addrShNbAgent)=nbagents;
+                
+            }
+            else if(lastDigitPid==5)
+            {
+                //recuperer la structure du nombre d'agents
+                strucNbAg nbagents;
+                nbagents = *(strucNbAg *)addrShNbAgent;
+                
+                //recuperer la structure des agents
+                struct Agent *ag = NULL;
+                ag=*(((struct Agent **)addrShAgent));
+                ag[nbagents.nbAg].groupe=1;
+                ag[nbagents.nbAg].langue=0;
+                ag[nbagents.nbAg].numero=getpid();
+                
+                //rétache l'agent
+                (*(struct Agent **)addrShAgent) = ag;
+                
+                //incrémenter et rattacher le nombre d'agnts
+                nbagents.nbAg++;
+                (*(strucNbAg *)addrShNbAgent)=nbagents;
 
                 
-                ((strucNbAg *)addrShNbAgent)->nbAg++;
-                V(accesSHM);
-
-              
-             //   }
-//                else if(lastDigitPid==1)
-//                {
-//                    struct Agent ag;
-//                    ag.groupe=0;
-//                    ag.langue=2;
-//                    ag.numero=getpid();
-//                    
-//                    strucNbAg sNbA2;
-//                    printf("PID dans crea agent : %d \n ",getpid());
-//                    sNbA2.nbAg = ((strucNbAg *)addrShNbAgent)->nbAg;
-//                    fflush(NULL);
-//                    printf("nb dans 1 %d : %d \n",getpid(),  sNbA2.nbAg);
-//                    sNbA2.nbAg++;
-//                    *((strucNbAg *)addrShNbAgent) = sNbA2;
-//                    *((struct Agent **)addrShAgent)[sNbA2.nbAg] = ag;
-//                    printf("NUMERO DANS MAIN %d !!!!!! %d \n",sNbA2.nbAg,((struct Agent **)addrShAgent)[sNbA2.nbAg]->numero);
-//
-//                }
-//                else  if(lastDigitPid==2)
-//                {
-//                    struct Agent ag;
-//                    ag.groupe=0;
-//                    ag.langue=0;
-//                    ag.numero=getpid();
-//                    
-//                    strucNbAg sNbA2;
-//                    printf("PID dans crea agent : %d \n ",getpid());
-//                    sNbA2.nbAg = ((strucNbAg *)addrShNbAgent)->nbAg;
-//                    fflush(NULL);
-//                    printf("nb dans 2 %d : %d \n",getpid(),  sNbA2.nbAg);
-//                    sNbA2.nbAg++;
-//                    *((strucNbAg *)addrShNbAgent) = sNbA2;
-//                    *((struct Agent **)addrShAgent)[sNbA2.nbAg] = ag;
-//                    printf("NUMERO DANS MAIN %d !!!!!! %d \n",sNbA2.nbAg,((struct Agent **)addrShAgent)[sNbA2.nbAg]->numero);
-//
-//
-//                }
-//                else  if(lastDigitPid==3)
-//                {
-//                    struct Agent ag;
-//                    ag.groupe=1;
-//                    ag.langue=1;
-//                    ag.numero=getpid();
-//                    strucNbAg sNbA2;
-//                    printf("PID dans crea agent : %d \n ",getpid());
-//                    sNbA2.nbAg = ((strucNbAg *)addrShNbAgent)->nbAg;
-//                    fflush(NULL);
-//                    printf("nb dans 3 %d : %d \n",getpid(),  sNbA2.nbAg);
-//                    sNbA2.nbAg++;
-//                    *((strucNbAg *)addrShNbAgent) = sNbA2;
-//                    *((struct Agent **)addrShAgent)[sNbA2.nbAg] = ag;
-//                    printf("NUMERO DANS MAIN %d !!!!!! %d \n",sNbA2.nbAg,((struct Agent **)addrShAgent)[sNbA2.nbAg]->numero);
-//
-//                }
-//                else if(lastDigitPid==4)
-//                {
-//                    struct Agent ag;
-//                    ag.groupe=1;
-//                    ag.langue=2;
-//                    ag.numero=getpid();
-//                    strucNbAg sNbA2;
-//                    printf("PID dans crea agent : %d \n ",getpid());
-//                    sNbA2.nbAg = ((strucNbAg *)addrShNbAgent)->nbAg;
-//                    fflush(NULL);
-//                    printf("nb dans 4 %d : %d \n",getpid(),  sNbA2.nbAg);
-//                    sNbA2.nbAg++;
-//                    *((strucNbAg *)addrShNbAgent) = sNbA2;
-//                    *((struct Agent **)addrShAgent)[sNbA2.nbAg] = ag;
-//                    printf("NUMERO DANS MAIN %d !!!!!! %d \n",sNbA2.nbAg,((struct Agent **)addrShAgent)[sNbA2.nbAg]->numero);
-//
-//                }
-//                else if(lastDigitPid==5)
-//                {
-//                    struct Agent ag;
-//                    ag.groupe=1;
-//                    ag.langue=0;
-//                    ag.numero=getpid();
-//                    strucNbAg sNbA2;
-//                    printf("PID dans crea agent : %d \n ",getpid());
-//                    sNbA2.nbAg = ((strucNbAg *)addrShNbAgent)->nbAg;
-//                    fflush(NULL);
-//                    printf("nb dans 5 %d : %d \n",getpid(),  sNbA2.nbAg);
-//                    sNbA2.nbAg++;
-//                    *((strucNbAg *)addrShNbAgent) = sNbA2;
-//                    *((struct Agent **)addrShAgent)[sNbA2.nbAg] = ag;
-//                    printf("NUMERO DANS MAIN %d !!!!!! %d \n",sNbA2.nbAg,((struct Agent **)addrShAgent)[sNbA2.nbAg]->numero);
-//                    
-//                }
-//                else if(lastDigitPid==6)
-//                {
-//                    struct Agent ag;
-//                    ag.groupe=0;
-//                    ag.langue=2;
-//                    ag.numero=getpid();
-//                    strucNbAg sNbA2;
-//                    printf("PID dans crea agent : %d \n ",getpid());
-//                    sNbA2.nbAg = ((strucNbAg *)addrShNbAgent)->nbAg;
-//                    fflush(NULL);
-//                    //printf("nb dans 6 %d : %d \n",getpid(),  sNbA2.nbAg);
-//                    sNbA2.nbAg++;
-//                    *((strucNbAg *)addrShNbAgent) = sNbA2;
-//                    ((struct Agent *)addrShAgent)[sNbA2.nbAg] = ag;
-//                    printf("NUMERO DANS MAIN %d !!!!!! %d \n",sNbA2.nbAg,((struct Agent **)addrShAgent)[sNbA2.nbAg]->numero);
-//
-//
-//                }
-//                else if(lastDigitPid==7)
-//                {
-//                    struct Agent ag;
-//                    ag.groupe=0;
-//                    ag.langue=2;
-//                    ag.numero=getpid();
-//                    strucNbAg sNbA2;
-//                    printf("PID dans crea agent : %d \n ",getpid());
-//                    sNbA2.nbAg = ((strucNbAg *)addrShNbAgent)->nbAg;
-//                    fflush(NULL);
-//                    printf("nb dans 7 %d : %d \n",getpid(),  sNbA2.nbAg);
-//                    sNbA2.nbAg++;
-//                    *((strucNbAg *)addrShNbAgent) = sNbA2;
-//                    *((struct Agent **)addrShAgent)[sNbA2.nbAg] = ag;
-//                    printf("NUMERO DANS MAIN %d !!!!!! %d \n",sNbA2.nbAg,((struct Agent **)addrShAgent)[sNbA2.nbAg]->numero);
-//
-//                }
-//                else if(lastDigitPid==8)
-//                {
-//                    struct Agent ag;
-//                    ag.groupe=1;
-//                    ag.langue=2;
-//                    ag.numero=getpid();
-//                    strucNbAg sNbA2;
-//                    printf("PID dans crea agent : %d \n ",getpid());
-//                    sNbA2.nbAg = ((strucNbAg *)addrShNbAgent)->nbAg;
-//                    fflush(NULL);
-//                    printf("nb dans 8 %d : %d \n",getpid(),  sNbA2.nbAg);
-//                    sNbA2.nbAg++;
-//                    *((strucNbAg *)addrShNbAgent) = sNbA2;
-//                    *((struct Agent **)addrShAgent)[sNbA2.nbAg] = ag;
-//                    printf("NUMERO DANS MAIN %d !!!!!! %d \n",sNbA2.nbAg,((struct Agent **)addrShAgent)[sNbA2.nbAg]->numero);
-//
-//                }
-//                else if(lastDigitPid==9)
-//                {
-//                    struct Agent ag;
-//                    ag.groupe=1;
-//                    ag.langue=2;
-//                    ag.numero=getpid();
-//                    strucNbAg sNbA2;
-//                    printf("PID dans crea agent : %d \n ",getpid());
-//                    sNbA2.nbAg = ((strucNbAg *)addrShNbAgent)->nbAg;
-//                    fflush(NULL);
-//                    printf("nb dans 9 %d : %d \n",getpid(),  sNbA2.nbAg);
-//                    sNbA2.nbAg++;
-//                    *((strucNbAg *)addrShNbAgent) = sNbA2;
-//                    ((struct Agent *)addrShAgent)[sNbA2.nbAg] = ag;
-//                    printf("NUMERO DANS MAIN %d !!!!!! %d \n",sNbA2.nbAg,((struct Agent **)addrShAgent)[sNbA2.nbAg]->numero);
-//
-//                }
-//                printf("NBNBNBNB it %d \n", iAg);
-                //iAg=NBAGENT+1;//permet de sortir du while une fois le fork créé
+            }
+            else if(lastDigitPid==6)
+            {
+                //recuperer la structure du nombre d'agents
+                strucNbAg nbagents;
+                nbagents = *(strucNbAg *)addrShNbAgent;
                 
-          //  }
-                iAg+=NBAGENT+1;
+                //recuperer la structure des agents
+                struct Agent *ag = NULL;
+                ag=*(((struct Agent **)addrShAgent));
+                ag[nbagents.nbAg].groupe=0;
+                ag[nbagents.nbAg].langue=2;
+                ag[nbagents.nbAg].numero=getpid();
+                
+                //rétache l'agent
+                (*(struct Agent **)addrShAgent) = ag;
+                
+                //incrémenter et rattacher le nombre d'agnts
+                nbagents.nbAg++;
+                (*(strucNbAg *)addrShNbAgent)=nbagents;
+             
+                
+            }
+            else if(lastDigitPid==7)
+            {
+                //recuperer la structure du nombre d'agents
+                strucNbAg nbagents;
+                nbagents = *(strucNbAg *)addrShNbAgent;
+                
+                //recuperer la structure des agents
+                struct Agent *ag = NULL;
+                ag=*(((struct Agent **)addrShAgent));
+                ag[nbagents.nbAg].groupe=0;
+                ag[nbagents.nbAg].langue=2;
+                ag[nbagents.nbAg].numero=getpid();
+                
+                //rétache l'agent
+                (*(struct Agent **)addrShAgent) = ag;
+                
+                //incrémenter et rattacher le nombre d'agnts
+                nbagents.nbAg++;
+                (*(strucNbAg *)addrShNbAgent)=nbagents;
+         
+            }
+            else if(lastDigitPid==8)
+            {
+                //recuperer la structure du nombre d'agents
+                strucNbAg nbagents;
+                nbagents = *(strucNbAg *)addrShNbAgent;
+                
+                //recuperer la structure des agents
+                struct Agent *ag = NULL;
+                ag=*(((struct Agent **)addrShAgent));
+                ag[nbagents.nbAg].groupe=1;
+                ag[nbagents.nbAg].langue=2;
+                ag[nbagents.nbAg].numero=getpid();
+                
+                //rétache l'agent
+                (*(struct Agent **)addrShAgent) = ag;
+                
+                //incrémenter et rattacher le nombre d'agnts
+                nbagents.nbAg++;
+                (*(strucNbAg *)addrShNbAgent)=nbagents;
+       
+            }
+            else if(lastDigitPid==9)
+            {
+                //recuperer la structure du nombre d'agents
+                strucNbAg nbagents;
+                nbagents = *(strucNbAg *)addrShNbAgent;
+                
+                //recuperer la structure des agents
+                struct Agent *ag = NULL;
+                ag=*(((struct Agent **)addrShAgent));
+                ag[nbagents.nbAg].groupe=1;
+                ag[nbagents.nbAg].langue=2;
+                ag[nbagents.nbAg].numero=getpid();
+                
+                //rétache l'agent
+                (*(struct Agent **)addrShAgent) = ag;
+                
+                //incrémenter et rattacher le nombre d'agnts
+                nbagents.nbAg++;
+                (*(strucNbAg *)addrShNbAgent)=nbagents;
+            }
+            iAg=NBAGENT+1;//permet de sortir du while une fois le fork créé
+            
+            V(accesSHM);
+
         }
-        
-
     }
     /*###################################################*/
     
     
-
-    
-    if ((shIdPiddMainProc = shmget(KEYMAINPID, sizeof(sPP), 0777 | IPC_CREAT)) < 0)
-        perror("shmget");
-    
-    if((addrPidMainProc = shmat (shIdPiddMainProc,(void*)0,0))==(int *) -1)
-        perror("pb shmataa");
-    
-    
-   
-   // if(((strucPidPartage*)addrPidMainProc)->pid==getpid())
-    //{
-        strucNbAg nBagents;
-        nBagents=*(((strucNbAg *)addrShNbAgent));
-        
+    strucNbAg nBagents;
+    nBagents=*(((strucNbAg *)addrShNbAgent));
     if(nBagents.nbAg==5)
     {
-        struct Agent *ag2 = NULL;
-        ag2=*(((struct Agent **)addrShAgent));
-        
-        int i;
-        for(i=0;i<5;++i)
-            printf("NUMERO %d \n", ag2[i].numero);
-        
+        lireAgent();
         
     }
+    
        
-        //if((*addrShAgent = shmat (shIdAgent,(void *)0,0))==(int *) -1)
-          //  perror("pb shmataa");
-        
-//        printf("On est dans le main proc %d \n",((strucPidPartage*)addrPidMainProc)->pid);
-       // P(accesApresCrea);
-
-//    printf("PID DANS MAIN lolol !!!!!! %d \n",((struct Agent *)addrShAgent)[0].numero);
-
-        
-//        lireAgent();
-//    }
-
     while (1){
         
         

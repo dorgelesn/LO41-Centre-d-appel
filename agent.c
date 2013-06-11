@@ -23,48 +23,46 @@ void lireAgent()
         perror("shmget dans agent");
     if((*addrShAgent = shmat (id,(void *)0,0))==(int *) -1)
         perror("pb shmataa");
+   
+    struct Agent *ag = NULL;
+    ag=*(((struct Agent **)addrShAgent));
     
-
     //printf("NBAAG : %d \n ", nbAg);
-    for(i=0; i<5;++i)
+    for(i=0; i<6;++i)
     {
-        printf("dans lire agent %d  \n", i);
+    
+    printf("dans lire agent %d  \n", i);
 
     /*----Pour affichage----*/
- /*   if(((struct Agent **)addrShAgent)[i]->langue==0)
+    if(ag[i].langue==0)
         langu="Français";
-    else if (((struct Agent **)addrShAgent)[i]->langue==1)
+    else if (ag[i].langue==1)
         langu="Anglais";
     else 
-        langu="Anglais/Fançais";*/
-        struct Agent  *ag = (((struct Agent *)addrShAgent));
-        printf("NUMERO %d \n",((struct Agent *)addrShAgent)[i].numero);
-        printf("NUMERO2 %d \n",(ag[i].numero));
-
-
+        langu="Anglais/Fançais";
   //  printf("GROUPE %d \n", ((struct Agent **)addrShAgent)[i]->langue);
     
-//    if(((struct Agent *)addrShAgent)[i].groupe==0)
-//       grp="Technicien";
-//    else
-//       grp="Commercial";
-//    /*----Pour affichage----*/
-//    
-//    fflush(NULL);
-//    
-//    //printf("Operateur %d parlant %s, dans le goupe %s \n", getpid(), langu, grp);
-//    
-//    fflush(NULL);//libération buffer pour affichage
-//    printf("|--------------------------------------------| \n");
-//    fflush(NULL);//libération buffer pour affichage
-//    printf("| Agent %d                              \n", ((struct Agent **)addrShAgent)[i]->numero);
-//    fflush(NULL);//libération buffer pour affichage
-//    printf("| %s parlant %s                \n", grp,langu);
-//    printf("|                                            | \n");
-//    printf("|                                            | \n");
-//    printf("|                                            | \n");
-//    printf("|============================================| \n");
-//    printf("\n");
+    if(ag[i].groupe==0)
+       grp="Technicien";
+    else
+       grp="Commercial";
+    /*----Pour affichage----*/
+    
+    fflush(NULL);
+    
+    //printf("Operateur %d parlant %s, dans le goupe %s \n", getpid(), langu, grp);
+    
+    fflush(NULL);//libération buffer pour affichage
+    printf("|--------------------------------------------| \n");
+    fflush(NULL);//libération buffer pour affichage
+    printf("| Agent %d                              \n", ag[i].numero);
+    fflush(NULL);//libération buffer pour affichage
+    printf("| %s parlant %s                \n", grp,langu);
+    printf("|                                            | \n");
+    printf("|                                            | \n");
+    printf("|                                            | \n");
+    printf("|============================================| \n");
+    printf("\n");
     
     fflush(NULL);//libération buffer pour affichage
     }
