@@ -56,6 +56,7 @@ struct Client *shCliEnFile;
 
 //Fontions
 void lireAgent();
-int traitementClient(struct Agent *ag, struct Client *cli);
+//int traitementClient(struct Agent *ag, struct Client *cli);
+int traitementClient(int probleme,int langue,int tpsAppel,int numero);
 
 #endif

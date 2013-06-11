@@ -53,6 +53,10 @@ typedef struct
 //Nombre de clients
 void *addrShNbClients; //pointeur sur l'adresse d'attachement du segment de mémoire partagée
 int shIdNbCli; // identificateur
+typedef struct
+{
+    int nb;
+}structNbClients;
 
 //Le client en lui même
 int shIdCli;
@@ -73,6 +77,9 @@ typedef struct
 void *addrShAgent[6];//pointeur sur l'adresse d'attachement du segment de mémoire partagée
 int shIdAgent;
 /*#####FIN mémoire partagé pour les agents######*/
+
+#define mainPid getpid()
+
 
 
 void fileAttenteAdd(struct FileAttente file, struct Client cli)
@@ -108,7 +115,7 @@ void supAllProc()
     kill(getpid(), SIGKILL);
 }
 
-void sigCreaCli(struct Client pClient);
+void sigCreaCli();
 
 int main(int argc, const char * argv[])
 {
@@ -129,8 +136,11 @@ int main(int argc, const char * argv[])
     //addrShNbClients=0;
     //addrShNbAgent=0;
     
-    if ((shIdNbCli = shmget(KEYCLI, sizeof(int), 0777 | IPC_CREAT)) < 0)
+    if ((shIdNbCli = shmget(KEYCLI, sizeof(structNbClients), 0777 | IPC_CREAT)) < 0)
 		perror("shmget");
+    
+    if((addrShNbClients = shmat (shIdNbCli,(void*)0,0))==(int *) -1)
+        perror("pb shmataa");
     
     if ((shIdCli = shmget(KEYCLI, sizeof(int), 0777 | IPC_CREAT)) < 0)
         perror("shmget");
@@ -184,10 +194,10 @@ int main(int argc, const char * argv[])
     if((addrPidMainProc = shmat (shIdPiddMainProc,(void*)0,0))==(int *) -1)
         perror("pb shmataa");
     
-    if(((strucPidPartage*)addrPidMainProc)->pid==getpid())
-    {
+ //   if(((strucPidPartage*)addrPidMainProc)->pid==getpid())
+   // {
         //permet de sécuriser l'accès à la mémoire partagé
-    }
+    //}
     
     /*##################################################
      /*-----création de NB agents (nb processus)----*/
@@ -196,6 +206,7 @@ int main(int argc, const char * argv[])
         
         if(fork()==0)//on est dans le fils
         {
+            //permet de sécuriser l'accès à la mémoire partagé
             P(accesSHM);
             //bloque ctrl+c dans tout les processus fils
             sigblock(SIGINT);
@@ -447,7 +458,8 @@ int main(int argc, const char * argv[])
         
         
         pause();
-        
+       // signal(SIGINT,sigCreaCli);
+
         /*  if((shNbAgent = shmat (shIdNbAgent,(void*)0,0))==(int *) -1)
          perror("pb shmataa");
          
@@ -483,34 +495,45 @@ void sigDeSig()
     
 }
 
-void sigCreaCli(struct Client pClient)
+void sigCreaCli()
 {
     //on est dans le fils et le pid est celui du prog principal
-    if((fork()==0)&&(getpid()==mainPid))
+    printf("dans signal ctrl+c \n");
+    if(fork()==0)
     {
         int j;
-        if((addrShNbClients = shmat (shIdNbCli,(void*)0 ,0))==(int *) -1)
-            perror("pb shmataa");
-        
-        if((shCli = shmat (shIdCli,(void *)0,0))==(int *) -1)
-            perror("pb shmataa");
-        
+        int probleme, langue, tpsAppel, numero;
+        //pour compter le nombre de clients
+        structNbClients nCli;
+        nCli=*(structNbClients *)addrShNbClients;
+        //nCLi = add
         //shNbClients[0]++;
-        /*    int forSwitch = addrShNbClients[0]+1;
+        
+         int forSwitch =nCli.nb;
          switch (forSwitch){
-         case 1:
-         shCli[1].probleme=(rand() % 3) + 0;
+         case 0:
+        srand(time(NULL) ^ (getpid()<<16));
+         probleme=(rand() % 3) + 0;
          srand(time(NULL) ^ (getpid()<<16));
-         shCli[1].langue=(rand() % 2) + 0;
+         langue=(rand() % 2) + 0;
          srand(time(NULL) ^ (getpid()<<16));
-         shCli[1].tempsAppel=(rand() % 10) + 5;
-         shCli[1].numero=getpid();
-         printf("Le client  : %d vient d'arriver  \n",shCli[1].numero);
-         //     printf("shAgent : %d \n", shAgent[shNbAgent[0]].numero);
-         traitementClient(&shAgent[1], &shCli[1]);
-         shNbClients[0]++;
-         break;
-         case 2:
+         tpsAppel=(rand() % 4) + 2;
+         numero=getpid();
+        
+        printf("Le client  : %d vient d'arriver, pb : %d, langue : %d  \n",numero, probleme, langue);
+        
+        if(traitementClient(probleme,langue,tpsAppel,numero)==1)
+        {
+            printf("Client traité correctement");
+            kill(numero,SIGKILL);
+        }
+                 
+                 
+        //printf("shAgent : %d \n", shAgent[shNbAgent[0]].numero);
+        
+
+        break;
+       /*  case 2:
          shCli[2].probleme=(rand() % 3) + 0;
          srand(time(NULL) ^ (getpid()<<16));
          shCli[2].tempsAppel=(rand() % 10) + 5;
@@ -534,20 +557,13 @@ void sigCreaCli(struct Client pClient)
          break;
          default:
          printf("Trop de client en file d'attend, %d racroche \n",getpid());
-         //for(j=1; j<=shNbClients[0];++j)
-         //     printf("Actuelement en file d'attente : %d  \n",shCli[j].numero);
-         //  shNbClients[0]++;
+         for(j=1; j<=shNbClients[0];++j)
+              printf("Actuelement en file d'attente : %d  \n",shCli[j].numero);
+           shNbClients[0]++;
          break;*/
-        //  }
+          }
         
         
-        //détachement mémoire partagée nombre de clients
-        // if(shmdt (shNbClients)==(int *) -1)
-        //   perror("pb shmataa");
-        
-        //détachement mémoire partagée des clients
-        //if(shmdt (shCli)==(int *) -1)
-        //  perror("pb shmataa");
         
         signal(SIGINT,sigDeSig);
         
