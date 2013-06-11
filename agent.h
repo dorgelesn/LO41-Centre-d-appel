@@ -19,6 +19,8 @@
 #include "fileAttente.h"
 #include"semaphore.h"
 
+#define KEYCLI 123
+
 #define KEYNBCLIENFILE 4321
 #define KEYCLIENFILE 321
 struct Agent
@@ -39,20 +41,10 @@ struct Agent
     //2=> français + anglais
     int langue;
     /*---------------*/
+    
+    int dispo;
         
 };
-
-//Variables
-int ressourceProc;
-/*---mémoire partagé pour les client en file d'attente---*/
-//Nombre de clients
-int *shNbCliEnFile;
-int shIdNbCliEnFile;
-
-//Le client en lui même
-int shIdCliEnFile;
-struct Client *shCliEnFile;
-/*------------------------------------*/
 
 //Fontions
 void lireAgent();

@@ -49,20 +49,6 @@ typedef struct
 /*####FIN Mémoire partagé pour stocker pid du processus main##*/
 
 
-/*#####Mémoire partagé pour les client########*/
-//Nombre de clients
-void *addrShNbClients; //pointeur sur l'adresse d'attachement du segment de mémoire partagée
-int shIdNbCli; // identificateur
-typedef struct
-{
-    int nb;
-}structNbClients;
-
-//Le client en lui même
-int shIdCli;
-struct Client *shCli;
-/*#####FIN Mémoire partagé pour les clien#######*/
-
 
 /*#####mémoire partagé pour les agents######*/
 //nombre d'agent
@@ -99,10 +85,12 @@ void sigUser1(int signum)
 
 void supAllProc()
 {
-    shmctl(shIdNbCliEnFile,IPC_RMID , NULL);
-    shmctl(shIdCliEnFile,IPC_RMID , NULL);
-    shmctl(shIdNbCli,IPC_RMID , NULL);
-    shmctl(shIdCli,IPC_RMID , NULL);
+    //shmctl(shIdNbCliEnFile,IPC_RMID , NULL);
+    //shmctl(shIdCliEnFile,IPC_RMID , NULL);
+    
+    //shmctl(shIdNbCli,IPC_RMID , NULL);
+    //shmctl(shIdCli,IPC_RMID , NULL);
+    
     shmctl(shIdAgent, IPC_RMID, NULL);
     shmctl(shIdNbAgent, IPC_RMID, NULL);
     shmctl(shIdPiddMainProc, IPC_RMID, NULL);
@@ -136,15 +124,7 @@ int main(int argc, const char * argv[])
     //addrShNbClients=0;
     //addrShNbAgent=0;
     
-    if ((shIdNbCli = shmget(KEYCLI, sizeof(structNbClients), 0777 | IPC_CREAT)) < 0)
-		perror("shmget");
-    
-    if((addrShNbClients = shmat (shIdNbCli,(void*)0,0))==(int *) -1)
-        perror("pb shmataa");
-    
-    if ((shIdCli = shmget(KEYCLI, sizeof(int), 0777 | IPC_CREAT)) < 0)
-        perror("shmget");
-    
+      
     /*-------pour pid du processus princiaple------*/
     strucPidPartage sPP;
     if ((shIdPiddMainProc = shmget(KEYMAINPID, sizeof(sPP), 0777 | IPC_CREAT)) < 0)
@@ -224,6 +204,7 @@ int main(int argc, const char * argv[])
                 //recuperer la structure des agents
                 struct Agent *ag = NULL;
                 ag=*(((struct Agent **)addrShAgent));
+                ag[nbagents.nbAg].dispo=1;
                 ag[nbagents.nbAg].groupe=0;
                 ag[nbagents.nbAg].langue=1;
                 ag[nbagents.nbAg].numero=getpid();
@@ -254,6 +235,7 @@ int main(int argc, const char * argv[])
                 //recuperer la structure des agents
                 struct Agent *ag = NULL;
                 ag=*(((struct Agent **)addrShAgent));
+                ag[nbagents.nbAg].dispo=1;
                 ag[nbagents.nbAg].groupe=0;
                 ag[nbagents.nbAg].langue=2;
                 ag[nbagents.nbAg].numero=getpid();
@@ -275,6 +257,7 @@ int main(int argc, const char * argv[])
                 //recuperer la structure des agents
                 struct Agent *ag = NULL;
                 ag=*(((struct Agent **)addrShAgent));
+                ag[nbagents.nbAg].dispo=1;
                 ag[nbagents.nbAg].groupe=0;
                 ag[nbagents.nbAg].langue=0;
                 ag[nbagents.nbAg].numero=getpid();
@@ -297,6 +280,7 @@ int main(int argc, const char * argv[])
                 //recuperer la structure des agents
                 struct Agent *ag = NULL;
                 ag=*(((struct Agent **)addrShAgent));
+                ag[nbagents.nbAg].dispo=1;
                 ag[nbagents.nbAg].groupe=1;
                 ag[nbagents.nbAg].langue=1;
                 ag[nbagents.nbAg].numero=getpid();
@@ -318,6 +302,7 @@ int main(int argc, const char * argv[])
                 //recuperer la structure des agents
                 struct Agent *ag = NULL;
                 ag=*(((struct Agent **)addrShAgent));
+                ag[nbagents.nbAg].dispo=1;
                 ag[nbagents.nbAg].groupe=1;
                 ag[nbagents.nbAg].langue=2;
                 ag[nbagents.nbAg].numero=getpid();
@@ -339,6 +324,7 @@ int main(int argc, const char * argv[])
                 //recuperer la structure des agents
                 struct Agent *ag = NULL;
                 ag=*(((struct Agent **)addrShAgent));
+                ag[nbagents.nbAg].dispo=1;
                 ag[nbagents.nbAg].groupe=1;
                 ag[nbagents.nbAg].langue=0;
                 ag[nbagents.nbAg].numero=getpid();
@@ -361,6 +347,7 @@ int main(int argc, const char * argv[])
                 //recuperer la structure des agents
                 struct Agent *ag = NULL;
                 ag=*(((struct Agent **)addrShAgent));
+                ag[nbagents.nbAg].dispo=1;
                 ag[nbagents.nbAg].groupe=0;
                 ag[nbagents.nbAg].langue=2;
                 ag[nbagents.nbAg].numero=getpid();
@@ -383,6 +370,7 @@ int main(int argc, const char * argv[])
                 //recuperer la structure des agents
                 struct Agent *ag = NULL;
                 ag=*(((struct Agent **)addrShAgent));
+                ag[nbagents.nbAg].dispo=1;
                 ag[nbagents.nbAg].groupe=0;
                 ag[nbagents.nbAg].langue=2;
                 ag[nbagents.nbAg].numero=getpid();
@@ -404,6 +392,7 @@ int main(int argc, const char * argv[])
                 //recuperer la structure des agents
                 struct Agent *ag = NULL;
                 ag=*(((struct Agent **)addrShAgent));
+                ag[nbagents.nbAg].dispo=1;
                 ag[nbagents.nbAg].groupe=1;
                 ag[nbagents.nbAg].langue=2;
                 ag[nbagents.nbAg].numero=getpid();
@@ -425,6 +414,7 @@ int main(int argc, const char * argv[])
                 //recuperer la structure des agents
                 struct Agent *ag = NULL;
                 ag=*(((struct Agent **)addrShAgent));
+                ag[nbagents.nbAg].dispo=1;
                 ag[nbagents.nbAg].groupe=1;
                 ag[nbagents.nbAg].langue=2;
                 ag[nbagents.nbAg].numero=getpid();
@@ -501,17 +491,17 @@ void sigCreaCli()
     printf("dans signal ctrl+c \n");
     if(fork()==0)
     {
-        int j;
+      //  int j;
         int probleme, langue, tpsAppel, numero;
         //pour compter le nombre de clients
-        structNbClients nCli;
-        nCli=*(structNbClients *)addrShNbClients;
+        //structNbClients nCli;
+        //nCli=*(structNbClients *)addrShNbClients;
         //nCLi = add
         //shNbClients[0]++;
         
-         int forSwitch =nCli.nb;
-         switch (forSwitch){
-         case 0:
+      //   int forSwitch =nCli.nb;
+       //  switch (forSwitch){
+        // case 0:
         srand(time(NULL) ^ (getpid()<<16));
          probleme=(rand() % 3) + 0;
          srand(time(NULL) ^ (getpid()<<16));
@@ -525,14 +515,11 @@ void sigCreaCli()
         if(traitementClient(probleme,langue,tpsAppel,numero)==1)
         {
             printf("Client traité correctement");
-            kill(numero,SIGKILL);
         }
                  
-                 
         //printf("shAgent : %d \n", shAgent[shNbAgent[0]].numero);
-        
 
-        break;
+//        break;
        /*  case 2:
          shCli[2].probleme=(rand() % 3) + 0;
          srand(time(NULL) ^ (getpid()<<16));
@@ -561,7 +548,7 @@ void sigCreaCli()
               printf("Actuelement en file d'attente : %d  \n",shCli[j].numero);
            shNbClients[0]++;
          break;*/
-          }
+     //     }
         
         
         
