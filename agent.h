@@ -20,6 +20,7 @@
 #include"semaphore.h"
 
 #define KEYCLI 123
+#define SEMNOMnbFIle "SemaphoreNBFILE"
 
 #define KEYNBCLIENFILE 4321
 #define KEYCLIENFILE 321
@@ -46,9 +47,22 @@ struct Agent
         
 };
 
+int accesSHMnbFIl=0;
+
+
+int idShAgent;
+void* addrShAgent[6];
+
+int shIdCliFile;
+void *addrShCliFile[10];
+
+void *addrShNbCliFile;
+int shIdNbCliFile;
+
 //Fontions
 void lireAgent();
 //int traitementClient(struct Agent *ag, struct Client *cli);
 int traitementClient(int probleme,int langue,int tpsAppel,int numero);
+void traitementClientDeFile();
 
 #endif

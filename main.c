@@ -91,6 +91,17 @@ void supAllProc()
     //shmctl(shIdNbCli,IPC_RMID , NULL);
     //shmctl(shIdCli,IPC_RMID , NULL);
     
+    int shIdCliFile;
+    if (( shIdCliFile= shmget(KEYCLIENFILE, sizeof(struct Client), 0777 | IPC_CREAT)) < 0)
+        perror("shmget shidagent ");
+    
+    int shIdNbCliFile;
+    if ((shIdNbCliFile= shmget(KEYNBCLIENFILE, sizeof(struct Client), 0777 | IPC_CREAT)) < 0)
+        perror("shmget shidagent ");
+
+    shmctl(shIdNbCliFile, IPC_RMID, NULL);
+    shmctl(shIdCliFile, IPC_RMID, NULL);
+    
     shmctl(shIdAgent, IPC_RMID, NULL);
     shmctl(shIdNbAgent, IPC_RMID, NULL);
     shmctl(shIdPiddMainProc, IPC_RMID, NULL);
@@ -446,8 +457,10 @@ int main(int argc, const char * argv[])
        
     while (1){
         
-        
         pause();
+        sleep(1);
+        traitementClientDeFile();
+
        // signal(SIGINT,sigCreaCli);
 
         /*  if((shNbAgent = shmat (shIdNbAgent,(void*)0,0))==(int *) -1)
@@ -491,18 +504,8 @@ void sigCreaCli()
     printf("dans signal ctrl+c \n");
     if(fork()==0)
     {
-      //  int j;
         int probleme, langue, tpsAppel, numero;
-        //pour compter le nombre de clients
-        //structNbClients nCli;
-        //nCli=*(structNbClients *)addrShNbClients;
-        //nCLi = add
-        //shNbClients[0]++;
-        
-      //   int forSwitch =nCli.nb;
-       //  switch (forSwitch){
-        // case 0:
-        srand(time(NULL) ^ (getpid()<<16));
+            srand(time(NULL) ^ (getpid()<<16));
          probleme=(rand() % 3) + 0;
          srand(time(NULL) ^ (getpid()<<16));
          langue=(rand() % 2) + 0;
@@ -516,41 +519,6 @@ void sigCreaCli()
         {
             printf("Client traité correctement");
         }
-                 
-        //printf("shAgent : %d \n", shAgent[shNbAgent[0]].numero);
-
-//        break;
-       /*  case 2:
-         shCli[2].probleme=(rand() % 3) + 0;
-         srand(time(NULL) ^ (getpid()<<16));
-         shCli[2].tempsAppel=(rand() % 10) + 5;
-         srand(time(NULL) ^ (getpid()<<16));
-         shCli[2].langue=(rand() % 2) + 0;
-         shCli[2].numero=getpid();
-         traitementClient(shAgent, &shCli[1]);
-         printf("Le client  : %d vient d'arriver  \n",shCli[2].numero);
-         shNbClients[0]++;
-         break;
-         case 3:
-         shCli[3].probleme=(rand() % 3) + 0;
-         srand(time(NULL) ^ (getpid()<<16));
-         shCli[3].tempsAppel=(rand() % 10) + 5;
-         srand(time(NULL) ^ (getpid()<<16));
-         shCli[3].langue=(rand() % 2) + 0;
-         shCli[3].numero=getpid();
-         traitementClient(shAgent, &shCli[1]);
-         printf("Le client  : %d vient d'arriver  \n",shCli[3].numero);
-         shNbClients[0]++;
-         break;
-         default:
-         printf("Trop de client en file d'attend, %d racroche \n",getpid());
-         for(j=1; j<=shNbClients[0];++j)
-              printf("Actuelement en file d'attente : %d  \n",shCli[j].numero);
-           shNbClients[0]++;
-         break;*/
-     //     }
-        
-        
         
         signal(SIGINT,sigDeSig);
         
