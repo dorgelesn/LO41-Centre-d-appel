@@ -30,7 +30,6 @@
 
 #define SEMNOM "SemaphoreCreacli"
 
-#define KEYCLI 123
 #define KEYAGENT 1234
 #define KEYMAINPID 3443
 #define KEYNBAGENT 6655
@@ -64,10 +63,6 @@ int shIdAgent;
 
 #define mainPid getpid()
 
-
-
-
-
 void supAllProc()
 {
     //shmctl(shIdNbCliEnFile,IPC_RMID , NULL);
@@ -77,12 +72,14 @@ void supAllProc()
     //shmctl(shIdCli,IPC_RMID , NULL);
     
     int shIdCliFile;
-    if (( shIdCliFile= shmget(KEYCLIENFILE, sizeof(struct Client), 0777 | IPC_CREAT)) < 0)
+    if ((shIdCliFile= shmget(KEYCLIENFILE, sizeof(struct Client), 0777 | IPC_CREAT)) < 0)
         perror("shmget shidagent ");
     
     int shIdNbCliFile;
     if ((shIdNbCliFile= shmget(KEYNBCLIENFILE, sizeof(int), 0777 | IPC_CREAT)) < 0)
         perror("shmget shidagent ");
+    
+    
     
     shmctl(shIdNbCliFile, IPC_RMID, NULL);
     shmctl(shIdCliFile, IPC_RMID, NULL);
@@ -115,17 +112,7 @@ int main(int argc, const char * argv[])
     int pvInit[1];
     pvInit[0]=1;
     initSem(1,SEMNOM,pvInit);
-    //int pvInit2[1];
-    //pvInit2[0]=1;
-    //initSem(1,SEMNOMATTCL,pvInit2);
-    //P(accesApresCrea);
-    
-    
-    //(accesApresCrea);
-    
-    //shNbCliEnFile=0;
-    //addrShNbClients=0;
-    //addrShNbAgent=0;
+
     
     
     /*-------pour pid du processus princiaple------*/
@@ -192,7 +179,13 @@ int main(int argc, const char * argv[])
             //permet de sécuriser l'accès à la mémoire partagé
             P(accesSHM);
             //bloque ctrl+c dans tout les processus fils
-            sigblock(SIGINT);
+            //sigblock(SIGINT);
+            sigset_t signauxBloques;
+            int  idSiglLock =sigemptyset(&signauxBloques);
+            sigaddset(&signauxBloques, 2);
+            sigprocmask(SIG_BLOCK, &signauxBloques,NULL);
+            
+             
             
             int numberPid = getpid();
             int lastDigitPid = numberPid%10;
@@ -432,8 +425,8 @@ int main(int argc, const char * argv[])
             iAg=NBAGENT+1;//permet de sortir du while une fois le fork créé
             
             V(accesSHM);
-            
         }
+        
     }
     /*###################################################*/
     
@@ -445,7 +438,7 @@ int main(int argc, const char * argv[])
         
     }
     
-    shmdt(addrShCliFile);
+   // shmdt(addrShCliFile);
     shmdt(addrShNbAgent);
     shmdt(addrShNbAgent);
     
@@ -454,10 +447,15 @@ int main(int argc, const char * argv[])
     
     while (1){
         
-        pause();
+        sleep(1);
+        //printf("avant traitement \n");
         traitementClientDeFile();
+        signal(SIGTSTP,supAllProc);
+        signal(SIGINT,sigCreaCli);
         
+
     }
+    
     return 0;
 }
 
@@ -471,25 +469,27 @@ void sigDeSig()
 
 void sigCreaCli()
 {
+    
     //on est dans le fils et le pid est celui du prog principal
     printf("dans signal ctrl+c \n");
     if(fork()==0)
-    {
+    {   sigset_t signauxBloques;
+        int  idSiglLock =sigemptyset(&signauxBloques);
+        sigaddset(&signauxBloques, 2);
+        sigprocmask(SIG_BLOCK, &signauxBloques,NULL);
+        
         int probleme, langue, tpsAppel, numero;
         srand(time(NULL) ^ (getpid()<<16));
         probleme=(rand() % 3) + 0;
         srand(time(NULL) ^ (getpid()<<16));
         langue=(rand() % 2) + 0;
         srand(time(NULL) ^ (getpid()<<16));
-        tpsAppel=(rand() % 4) + 2;
+        tpsAppel=(rand() % 6) + 5;
         numero=getpid();
         
         printf("Le client  : %d vient d'arriver, pb : %d, langue : %d  \n",numero, probleme, langue);
         
-        if(traitementClient(probleme,langue,tpsAppel,numero)==1)
-        {
-            printf("Client traité correctement");
-        }
+        traitementClient(probleme,langue,tpsAppel,numero);
         
         signal(SIGINT,sigDeSig);
         

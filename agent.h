@@ -55,10 +55,6 @@ void *addrShCliFile[10];
 void *addrShNbCliFile;
 int shIdNbCliFile;
 
-static int accesShmFile=0;
-
-struct Client *cli=NULL;
-struct Agent *ag = NULL;
 
 //Fontions
 void lireAgent();

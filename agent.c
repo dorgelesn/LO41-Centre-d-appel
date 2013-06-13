@@ -8,8 +8,6 @@
 #include "agent.h"
 
 /*#####Mémoire partagé pour les client########*/
-//Nombre de clients
-int pvInit[1];
 
 typedef struct
 {
@@ -23,11 +21,7 @@ void lireAgent()
     char* langu;
     int i;
     
-    pvInit[0]=1;
-    printf("Creation semaphore \n");
-    initSem(1,SEMNOMFile,pvInit);
-  
-    void* addrShAgent[6];
+    // void* addrShAgent[6];
     
     if ((idShAgent = shmget(1234, sizeof(struct Agent), 0777 | IPC_CREAT)) < 0)
         perror("shmget dans agent");
@@ -100,13 +94,12 @@ void lireAgent()
     (*(struct Client **)addrShCliFile) = cli;
     
     // shmdt(addrShCliFile);
-    //  shmdt(addrShNbCliFile);
+    // shmdt(addrShNbCliFile);
 }
 
 int traitementClient(int probleme,int langue,int tpsAppel,int numero)
 {
- //    P(accesShmFile);
-    printf("Prendre la ressosurce 1 \n");
+    
     if (( shIdCliFile= shmget(KEYCLIENFILE, sizeof(struct Client), 0777 | IPC_CREAT)) < 0)
         perror("shmget shidagent ");
     
@@ -126,14 +119,15 @@ int traitementClient(int probleme,int langue,int tpsAppel,int numero)
     if((*addrShAgent = shmat (idShAgent,(void *)0,0))==(int *) -1)
         perror("pb shmataa");
     
-
+    
+    struct Client *cli=NULL;
+    struct Agent *ag = NULL;
     
     cli=*(((struct Client **)addrShCliFile));
-    
     ag=*(((struct Agent **)addrShAgent));
     
     int i;
-    printf(" dans traitement \n");
+    
     //on test le client sur chaque agent
     
     for(i=0; i<6; ++i)
@@ -156,7 +150,6 @@ int traitementClient(int probleme,int langue,int tpsAppel,int numero)
             (*(struct Agent **)addrShAgent) = ag;
             
             printf("Le client %d est entrain d'être traité par l'agent %d pendant sec %d \n",numero,ag[i].numero,tpsAppel);
-            // P(ressourceProc);//on prend la ressource du processus
             //met le processus en attente
             sleep(tpsAppel);
             //          V(ressourceProc);
@@ -178,7 +171,7 @@ int traitementClient(int probleme,int langue,int tpsAppel,int numero)
         //ratachement nb clients
         (*(structNbClientsFile *)addrShNbCliFile)=nbclientsFile;
         
-        printf("nb clients en file  : %d  \n", nbclientsFile.nb);
+        //printf("nb clients en file  : %d  \n", nbclientsFile.nb);
         
         cli[nbclientsFile.nb].rang=nbclientsFile.nb;
         cli[nbclientsFile.nb].langue=langue;
@@ -187,7 +180,7 @@ int traitementClient(int probleme,int langue,int tpsAppel,int numero)
         cli[nbclientsFile.nb].tempsAppel=tpsAppel;
         
         //ratachement clients
-        
+        printf("################ \n");
         printf("actuelement en file d'attente : \n");
         
         int j;
@@ -196,63 +189,57 @@ int traitementClient(int probleme,int langue,int tpsAppel,int numero)
             if(cli[j].rang!=-1)
                 printf("Client : %d de rang %d \n",cli[j].numero,cli[j].rang);
         }
+        printf("################ \n");
+
         (*(struct Client **)addrShCliFile) = cli;
-        
     }
     else
     {
         printf("Trop de client en file d'attente, le client %d raccroche \n", numero);
-        
         kill(numero,SIGKILL);
-
     }
-    printf("liberer la ressource 1 \n");
-   // V(accesShmFile);
-
+    
+    shmdt(addrShCliFile);
+    shmdt(addrShNbCliFile);
+    shmdt(addrShAgent);
 }
 
 
 void traitementClientDeFile()
 {
-    //P(accesShmFile);
-        printf("Prendre la ressource 2 \n");
+    
     if ((shIdNbCliFile= shmget(KEYNBCLIENFILE, sizeof(structNbClientsFile), 0777 | IPC_CREAT)) < 0)
         perror("shmget shidagent ");
     
     if((addrShNbCliFile = shmat (shIdNbCliFile,(void *)0,0))==(int *) -1)
         perror("pb shmata addrShNbCliFile dans traitementClient");
     
-    printf("apres \n");
     
-    //struct Client *cli = NULL;
+    struct Agent *ag = NULL;
+    struct Client *cli = NULL;
     cli=*(struct Client **)addrShCliFile;
-
-    //struct Agent *ag = NULL;
     ag=*(struct Agent **)addrShAgent;
     
-   
     structNbClientsFile nbclientsFile;
     nbclientsFile=*(structNbClientsFile*)addrShNbCliFile;
     
-    int idx;
-     int idx2;
-  //  shmdt(addrShCliFile);
-   // shmdt(addrShNbCliFile);
-    printf(" nbclient : %d ",nbclientsFile.nb);
-    if(nbclientsFile.nb>2)
+    //  shmdt(addrShCliFile);
+    // shmdt(addrShNbCliFile);
+    if(nbclientsFile.nb>=1)
     {
+
+        int idx;
+        int idx2;
         
-        printf("dans traitement FILE : %d \n", nbclientsFile.nb);
         //on test pour chaque agent
-       // int placeDansListe;
+        // int placeDansListe;
         
-        for(idx=0; idx<6; ++idx)
-        {  
-            
+        for(idx=0; idx<6;idx++)
+        {
             //ont test pour chaque client dans la file
-            for(idx2=0;idx2<10;++idx2)
+            for(idx2=0;idx2<nbclientsFile.nb;++idx2)
             {
-             
+                
                 /*######A IMPLEMENTER######*/
                 //int rankMini=100;
                 //int idx3;
@@ -271,9 +258,13 @@ void traitementClientDeFile()
                  }
                  }*/
                 
-                
                 //printf(" FIN TRAITEMENT FILE !! idx : %d  idx2 : %d \n", idx, idx2);
-                printf(" ag: %d cli : %d ",ag[0].langue, cli[0].numero);
+                usleep(100);
+                
+                
+                //  printf(" cli %d \n",cli[idx].numero);
+                
+                
                 //SI la langue agent est Fr/an (2) ET agent tech(0) et agent dispo ca passe
                 //SI langue agent anglais (1) ET langue du client anglais (1) ET agent tech(0) ET dispo ca passe
                 //SI langue agent Francais (0) ET langue client Français (0) ET agent tech (0) ET dispo ca passe
@@ -281,59 +272,59 @@ void traitementClientDeFile()
                 //SI langue agent anglais (1) ET langue du client anglais (1) ET agent com(1) ET client com(1) ET dispo ca passe
                 //SI langue agent Francais (0) ET langue client Français (0) ET agent com(1) ET client com(1) ET dispo ca passe
                 
-//                if((ag[idx].langue==2&&ag[idx].groupe==0&&ag[idx].dispo==1 &&cli[idx2].numero!=-1&&cli[idx2].numero!=0 &&ag[idx].dispo==1)
-//                   || (ag[idx].langue==1 && cli[idx2].langue==1&&ag[idx].groupe==0 &&cli[idx2].numero!=-1&&cli[idx2].numero!=0&&ag[idx].dispo==1)
-//                   || (ag[idx].langue==0 && cli[idx2].langue==0&&ag[idx2].groupe==0&&cli[idx2].numero!=-1&&cli[idx2].numero!=0&&ag[idx].dispo==1)
-//                   || (ag[idx].langue==2 && ag[idx].groupe==1 && cli[idx2].probleme==1&&cli[idx2].numero!=-1&&cli[idx2].numero!=0 &&ag[idx].dispo==1)
-//                   || (ag[idx].langue==1 && cli[idx2].langue==1&&ag[idx].groupe==1&&cli[idx2].probleme==1&&cli[idx2].numero!=-1&&cli[idx2].numero!=0&&ag[idx].dispo==1)
-//                   || (ag[idx].langue==0 && cli[idx2].langue==0&&ag[idx].groupe==1&&cli[idx2].probleme==1&&cli[idx2].numero!=-1&&cli[idx2].numero!=0&&ag[idx].dispo==1))
-//                {
-//                    printf("AVANT SLEEP \n ");
-//
-//                   ag[idx].dispo=0;
-//                    
-//                   // printf("Le client %d qui vient de la file d'attente est entrain d'être traité par l'agent %d pendant sec %d \n",cli[idx2].numero,ag[idx].numero,cli[idx2].tempsAppel);
-//
-//                    (*(struct Agent **)addrShAgent) = ag;
-//                    
-//                    ag=*(((struct Agent **)addrShAgent));
-//                    
-//                    nbclientsFile.nb--;
-//                    printf("Nb client après file %d \n",nbclientsFile.nb);
-//                    *(structNbClientsFile *)addrShNbCliFile=nbclientsFile;//CETTE FONCTION PLANTE
-//                    cli[idx2].rang=-1;
-//                    cli[idx2].langue=-1;
-//                    cli[idx2].numero=-1;
-//                    cli[idx2].probleme=-1;
-//                    cli[idx2].tempsAppel=-1;
-//                   
-//
-//
-//                    *(struct Client *)addrShCliFile= *cli;
-//
-//                    sleep(cli[idx2].tempsAppel);
-//                    ag[idx].dispo=1;
-//                    (*(struct Agent **)addrShAgent) = ag;
-//                    
-//                    //                    /*--Tuer le processus processus client et débloquer l'agent une fois le temps passé..--*/
-//                    printf("Client %d à terminé après avoir été dans la file ! \n", cli[idx2].numero);
-//                    
-//            
-//                    if(cli[idx2].numero>0)
-//                    {
-//                        printf("KILL %d ", cli[idx2].numero);
-//                        kill(cli[idx2].numero,SIGKILL);
-//                    }
-//                
-//
-//                }
+                if((ag[idx].langue==2&&ag[idx].groupe==0&&ag[idx].dispo==1 &&cli[idx2].numero!=-1&&cli[idx2].numero!=0 &&ag[idx].dispo==1)
+                   || (ag[idx].langue==1 && cli[idx2].langue==1&&ag[idx].groupe==0 &&cli[idx2].numero!=-1&&cli[idx2].numero!=0&&ag[idx].dispo==1)
+                   || (ag[idx].langue==0 && cli[idx2].langue==0&&ag[idx2].groupe==0&&cli[idx2].numero!=-1&&cli[idx2].numero!=0&&ag[idx].dispo==1)
+                   || (ag[idx].langue==2 && ag[idx].groupe==1 && cli[idx2].probleme==1&&cli[idx2].numero!=-1&&cli[idx2].numero!=0 &&ag[idx].dispo==1)
+                   || (ag[idx].langue==1 && cli[idx2].langue==1&&ag[idx].groupe==1&&cli[idx2].probleme==1&&cli[idx2].numero!=-1&&cli[idx2].numero!=0&&ag[idx].dispo==1)
+                   || (ag[idx].langue==0 && cli[idx2].langue==0&&ag[idx].groupe==1&&cli[idx2].probleme==1&&cli[idx2].numero!=-1&&cli[idx2].numero!=0&&ag[idx].dispo==1))
+                {
+                    
+                    ag[idx].dispo=0;
+                    
+                    printf("Le client %d qui vient de la file d'attente est entrain d'être traité par l'agent %d pendant sec %d \n",cli[idx2].numero,ag[idx].numero,cli[idx2].tempsAppel);
+                    
+                    (*(struct Agent **)addrShAgent) = ag;
+                    
+                    ag=*(((struct Agent **)addrShAgent));
+                    
+                    nbclientsFile.nb--;
+                    *(structNbClientsFile *)addrShNbCliFile=nbclientsFile;//CETTE FONCTION PLANTE
 
+                    //on place à -1 le client traité
+                    printf("Client %d à terminé après avoir été dans la file ! \n", cli[idx2].numero);
+
+                    int pidForKill = cli[idx2].numero;
+                    cli[idx2].rang=-1;
+                    cli[idx2].langue=-1;
+                    cli[idx2].numero=-1;
+                    cli[idx2].probleme=-1;
+                    cli[idx2].tempsAppel=-1;
+                    
+                    *(struct Client *)addrShCliFile= *cli;
+                    
+                    sleep(cli[idx2].tempsAppel);
+                    ag[idx].dispo=1;
+                    (*(struct Agent **)addrShAgent) = ag;
+                    
+                    //                    /*--Tuer le processus processus client et débloquer l'agent une fois le temps passé..--*/
+                    
+                    
+                    if(pidForKill>0)
+                    {
+                        printf("KILL %d ", pidForKill);
+                        kill(pidForKill,SIGKILL);
+                    }
+                    
+                }
             }
+            
         }
+        
     }
-    if(shmdt(addrShNbCliFile)==-1)
-        perror("shmdt addrShNbCliFile ");
     
-    printf("Liberer la ressource  2 \n");
- //  V(accesShmFile);
+    shmdt(addrShCliFile);
+    shmdt(addrShNbCliFile);
+    shmdt(addrShAgent);
+    
 }

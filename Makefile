@@ -5,6 +5,8 @@ SOURCES=main.c client.c agent.c semaphore.c
 OBJECTS=$(SOURCES:.c=.o)
 EXECUTABLE=projet
 
+
+
 all: $(SOURCES) $(EXECUTABLE)
 	
 $(EXECUTABLE): $(OBJECTS) 
