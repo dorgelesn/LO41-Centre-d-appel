@@ -26,7 +26,6 @@
 //files
 #include "agent.h"
 #include "client.h"
-#include "fileAttente.h"
 #define NBAGENT 6
 
 #define SEMNOM "SemaphoreCreacli"
@@ -49,7 +48,6 @@ typedef struct
 /*####FIN Mémoire partagé pour stocker pid du processus main##*/
 
 
-
 /*#####mémoire partagé pour les agents######*/
 //nombre d'agent
 void *addrShNbAgent;
@@ -68,20 +66,7 @@ int shIdAgent;
 
 
 
-void fileAttenteAdd(struct FileAttente file, struct Client cli)
-{
-    file.listeClient[file.size+1]=cli;
-    file.size++;
-    printf("size lol %d \n",file.size);
-}
 
-void sigUser1(int signum)
-{
-    if (signum==SIGUSR1)
-    {
-        printf("dans sigUser1 \n");
-    }
-}
 
 void supAllProc()
 {
@@ -96,9 +81,9 @@ void supAllProc()
         perror("shmget shidagent ");
     
     int shIdNbCliFile;
-    if ((shIdNbCliFile= shmget(KEYNBCLIENFILE, sizeof(struct Client), 0777 | IPC_CREAT)) < 0)
+    if ((shIdNbCliFile= shmget(KEYNBCLIENFILE, sizeof(int), 0777 | IPC_CREAT)) < 0)
         perror("shmget shidagent ");
-
+    
     shmctl(shIdNbCliFile, IPC_RMID, NULL);
     shmctl(shIdCliFile, IPC_RMID, NULL);
     
@@ -110,6 +95,13 @@ void supAllProc()
     key_t cle = ftok(SEMNOM,'0');
     (tabSemId  = semget(cle, 1, IPC_CREAT  | 0600));
     semctl(tabSemId, IPC_RMID, NULL);
+    
+    int tabSemId2;
+    key_t cle2 = ftok(SEMNOMFile,'0');
+    (tabSemId2  = semget(cle2, 1, IPC_CREAT  | 0600));
+    
+    semctl(tabSemId2, IPC_RMID, NULL);
+
     
     kill(getpid(), SIGKILL);
 }
@@ -135,7 +127,7 @@ int main(int argc, const char * argv[])
     //addrShNbClients=0;
     //addrShNbAgent=0;
     
-      
+    
     /*-------pour pid du processus princiaple------*/
     strucPidPartage sPP;
     if ((shIdPiddMainProc = shmget(KEYMAINPID, sizeof(sPP), 0777 | IPC_CREAT)) < 0)
@@ -160,7 +152,7 @@ int main(int argc, const char * argv[])
     signal(SIGTSTP,supAllProc);
     /*########################################*/
     
-    signal(SIGUSR1,sigUser1);
+    
     
     int iAg;
     int grpAg;
@@ -185,9 +177,9 @@ int main(int argc, const char * argv[])
     if((addrPidMainProc = shmat (shIdPiddMainProc,(void*)0,0))==(int *) -1)
         perror("pb shmataa");
     
- //   if(((strucPidPartage*)addrPidMainProc)->pid==getpid())
-   // {
-        //permet de sécuriser l'accès à la mémoire partagé
+    //   if(((strucPidPartage*)addrPidMainProc)->pid==getpid())
+    // {
+    //permet de sécuriser l'accès à la mémoire partagé
     //}
     
     /*##################################################
@@ -211,7 +203,7 @@ int main(int argc, const char * argv[])
                 //recuperer la structure du nombre d'agents
                 strucNbAg nbagents;
                 nbagents = *(strucNbAg *)addrShNbAgent;
-            
+                
                 //recuperer la structure des agents
                 struct Agent *ag = NULL;
                 ag=*(((struct Agent **)addrShAgent));
@@ -224,7 +216,7 @@ int main(int argc, const char * argv[])
                 (*(struct Agent **)addrShAgent) = ag;
                 
                 fflush(NULL);
-            
+                
                 //pour test
                 //  struct Agent *ag2 = NULL;
                 //ag2=*(((struct Agent **)addrShAgent));
@@ -238,7 +230,7 @@ int main(int argc, const char * argv[])
             }
             else if(lastDigitPid==1)
             {
-                 
+                
                 //recuperer la structure du nombre d'agents
                 strucNbAg nbagents;
                 nbagents = *(strucNbAg *)addrShNbAgent;
@@ -253,7 +245,7 @@ int main(int argc, const char * argv[])
                 
                 //rétache l'agent
                 (*(struct Agent **)addrShAgent) = ag;
-            
+                
                 //incrémenter et rattacher le nombre d'agnts
                 nbagents.nbAg++;
                 (*(strucNbAg *)addrShNbAgent)=nbagents;
@@ -279,7 +271,7 @@ int main(int argc, const char * argv[])
                 //incrémenter et rattacher le nombre d'agnts
                 nbagents.nbAg++;
                 (*(strucNbAg *)addrShNbAgent)=nbagents;
-      
+                
                 
             }
             else  if(lastDigitPid==3)
@@ -302,7 +294,7 @@ int main(int argc, const char * argv[])
                 //incrémenter et rattacher le nombre d'agnts
                 nbagents.nbAg++;
                 (*(strucNbAg *)addrShNbAgent)=nbagents;
-         
+                
             }
             else if(lastDigitPid==4)
             {
@@ -346,7 +338,7 @@ int main(int argc, const char * argv[])
                 //incrémenter et rattacher le nombre d'agnts
                 nbagents.nbAg++;
                 (*(strucNbAg *)addrShNbAgent)=nbagents;
-
+                
                 
             }
             else if(lastDigitPid==6)
@@ -369,7 +361,7 @@ int main(int argc, const char * argv[])
                 //incrémenter et rattacher le nombre d'agnts
                 nbagents.nbAg++;
                 (*(strucNbAg *)addrShNbAgent)=nbagents;
-             
+                
                 
             }
             else if(lastDigitPid==7)
@@ -392,7 +384,7 @@ int main(int argc, const char * argv[])
                 //incrémenter et rattacher le nombre d'agnts
                 nbagents.nbAg++;
                 (*(strucNbAg *)addrShNbAgent)=nbagents;
-         
+                
             }
             else if(lastDigitPid==8)
             {
@@ -414,7 +406,7 @@ int main(int argc, const char * argv[])
                 //incrémenter et rattacher le nombre d'agnts
                 nbagents.nbAg++;
                 (*(strucNbAg *)addrShNbAgent)=nbagents;
-       
+                
             }
             else if(lastDigitPid==9)
             {
@@ -440,11 +432,10 @@ int main(int argc, const char * argv[])
             iAg=NBAGENT+1;//permet de sortir du while une fois le fork créé
             
             V(accesSHM);
-
+            
         }
     }
     /*###################################################*/
-    
     
     strucNbAg nBagents;
     nBagents=*(((strucNbAg *)addrShNbAgent));
@@ -454,37 +445,17 @@ int main(int argc, const char * argv[])
         
     }
     
-       
+    shmdt(addrShCliFile);
+    shmdt(addrShNbAgent);
+    shmdt(addrShNbAgent);
+    
+    shmdt(addrShNbCliFile);
+    
+    
     while (1){
         
         pause();
-        sleep(1);
         traitementClientDeFile();
-
-       // signal(SIGINT,sigCreaCli);
-
-        /*  if((shNbAgent = shmat (shIdNbAgent,(void*)0,0))==(int *) -1)
-         perror("pb shmataa");
-         
-         if((shAgent = shmat (shIdNbAgent,(void *)0,0))==(int *) -1)
-         perror("pb shmataa");
-         
-         if ((shIdNbCliEnFile = shmget(KEYNBCLIENFILE, sizeof(int), 0777 | IPC_CREAT)) < 0)
-         perror("shmget");
-         
-         if((shNbCliEnFile = shmat (shIdNbCliEnFile,(void*)0,0))==(int *) -1)
-         perror("pb shmat nb cli en file");
-         
-         if ((shIdCliEnFile = shmget(KEYCLIENFILE, sizeof(int), 0777 | IPC_CREAT)) < 0)
-         perror("shmget");
-         
-         if((shCliEnFile = shmat (shIdCliEnFile,(void*)0,0))==(int *) -1)
-         perror("pb shmat nb cli en file");*/
-        
-        
-        //     printf("En file d'attentes : \n ");
-        //   if(shNbCliEnFile>0)
-        //printf("%d \n : ",shCliEnFile[0].numero);
         
     }
     return 0;
@@ -505,13 +476,13 @@ void sigCreaCli()
     if(fork()==0)
     {
         int probleme, langue, tpsAppel, numero;
-            srand(time(NULL) ^ (getpid()<<16));
-         probleme=(rand() % 3) + 0;
-         srand(time(NULL) ^ (getpid()<<16));
-         langue=(rand() % 2) + 0;
-         srand(time(NULL) ^ (getpid()<<16));
-         tpsAppel=(rand() % 4) + 2;
-         numero=getpid();
+        srand(time(NULL) ^ (getpid()<<16));
+        probleme=(rand() % 3) + 0;
+        srand(time(NULL) ^ (getpid()<<16));
+        langue=(rand() % 2) + 0;
+        srand(time(NULL) ^ (getpid()<<16));
+        tpsAppel=(rand() % 4) + 2;
+        numero=getpid();
         
         printf("Le client  : %d vient d'arriver, pb : %d, langue : %d  \n",numero, probleme, langue);
         

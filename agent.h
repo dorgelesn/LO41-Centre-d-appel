@@ -16,11 +16,10 @@
 #include <signal.h>
 //files
 #include "client.h"
-#include "fileAttente.h"
 #include"semaphore.h"
 
 #define KEYCLI 123
-#define SEMNOMnbFIle "SemaphoreNBFILE"
+#define SEMNOMFile "SemaphoreLIREfile"
 
 #define KEYNBCLIENFILE 4321
 #define KEYCLIENFILE 321
@@ -47,9 +46,6 @@ struct Agent
         
 };
 
-int accesSHMnbFIl=0;
-
-
 int idShAgent;
 void* addrShAgent[6];
 
@@ -58,6 +54,11 @@ void *addrShCliFile[10];
 
 void *addrShNbCliFile;
 int shIdNbCliFile;
+
+static int accesShmFile=0;
+
+struct Client *cli=NULL;
+struct Agent *ag = NULL;
 
 //Fontions
 void lireAgent();
