@@ -2,12 +2,9 @@
 LO41-Projet.xcodeproj
 .DS_Store
 projet
--9
+
 
 *.out
 
 core
 
-pkill
-
-projet,projet

@@ -3,7 +3,6 @@
 //  LO41-Projet
 //
 
-
 #ifndef LO41_Projet_agent_h
 #define LO41_Projet_agent_h
 #include <stdio.h>
@@ -16,6 +15,7 @@
 #include "client.h"
 #include"semaphore.h"
 
+#define NBAGENT 6
 #define KEYCLI 123
 #define SEMNOMFile "SemaphoreLIREfile"
 
@@ -45,7 +45,7 @@ struct Agent
 };
 
 int idShAgent;
-void* addrShAgent[6];
+void* addrShAgent[NBAGENT];
 
 int shIdCliFile;
 void *addrShCliFile[10];

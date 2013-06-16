@@ -188,7 +188,7 @@ int traitementClient(int probleme,int langue,int tpsAppel,int numero, int nbAgen
                 printf("Client : %d de rang %d \n",cli[j].numero,cli[j].rang);
         }
         printf("################ \n");
-
+        
         (*(struct Client **)addrShCliFile) = cli;
     }
     else
@@ -225,7 +225,7 @@ void traitementClientDeFile(int nbAgent)
     // shmdt(addrShNbCliFile);
     if(nbclientsFile.nb>=1)
     {
-
+        
         int idx;
         int idx2;
         
@@ -288,10 +288,10 @@ void traitementClientDeFile(int nbAgent)
                     
                     nbclientsFile.nb--;
                     *(structNbClientsFile *)addrShNbCliFile=nbclientsFile;//CETTE FONCTION PLANTE
-
+                    
                     //on place à -1 le client traité
                     printf("Client %d à terminé après avoir été dans la file ! \n", cli[idx2].numero);
-
+                    
                     int pidForKill = cli[idx2].numero;
                     cli[idx2].rang=-1;
                     cli[idx2].langue=-1;
@@ -300,6 +300,7 @@ void traitementClientDeFile(int nbAgent)
                     cli[idx2].tempsAppel=-1;
                     
                     *(struct Client *)addrShCliFile= *cli;
+
                     
                     sleep(cli[idx2].tempsAppel);
                     ag[idx].dispo=1;

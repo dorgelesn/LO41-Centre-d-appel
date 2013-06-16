@@ -4,7 +4,7 @@
 //
 
 
-//#include <stdio.h>
+#include <stdio.h>
 #include <pthread.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -48,7 +48,7 @@ typedef struct
 /*####FIN Mémoire partagé pour stocker pid du processus main##*/
 
 //l'agent en lui même
-void *addrShAgent[6];//pointeur sur l'adresse d'attachement du segment de mémoire partagée
+void *addrShAgent[NBAGENT];//pointeur sur l'adresse d'attachement du segment de mémoire partagée
 int shIdAgent;
 
 /*#####FIN mémoire partagé pour les agents######*/
@@ -83,8 +83,6 @@ void supAllProc()
     if ((shIdNbCliFile= shmget(KEYNBCLIENFILE, sizeof(int), 0777 | IPC_CREAT)) < 0)
         perror("shmget shidagent ");
     
-    
-    
     shmctl(shIdNbCliFile, IPC_RMID, NULL);
     shmctl(shIdCliFile, IPC_RMID, NULL);
     
@@ -112,13 +110,11 @@ void sigCreaCli();
 int main(int argc, const char * argv[])
 {
     
-    
     printf("nb agents : %d \n", NBAGENT);
     
     int pvInit[1];
     pvInit[0]=1;
     initSem(1,SEMNOM,pvInit);
-    
     
     
     /*-------pour pid du processus princiaple------*/
@@ -145,7 +141,6 @@ int main(int argc, const char * argv[])
     signal(SIGTSTP,supAllProc);
     /*########################################*/
     
-       
     
     int iAg;
     int grpAg;
@@ -170,10 +165,7 @@ int main(int argc, const char * argv[])
     if((addrPidMainProc = shmat (shIdPiddMainProc,(void*)0,0))==(int *) -1)
         perror("pb shmataa");
     
-    //   if(((strucPidPartage*)addrPidMainProc)->pid==getpid())
-    // {
-    //permet de sécuriser l'accès à la mémoire partagé
-    //}
+  
     
     /*##################################################
      /*-----création de NB agents (nb processus)----*/
@@ -190,8 +182,6 @@ int main(int argc, const char * argv[])
             int  idSiglLock =sigemptyset(&signauxBloques);
             sigaddset(&signauxBloques, 2);
             sigprocmask(SIG_BLOCK, &signauxBloques,NULL);
-            
-            
             
             int numberPid = getpid();
             int lastDigitPid = numberPid%10;
@@ -215,11 +205,6 @@ int main(int argc, const char * argv[])
                 (*(struct Agent **)addrShAgent) = ag;
                 
                 fflush(NULL);
-                
-                //pour test
-                //  struct Agent *ag2 = NULL;
-                //ag2=*(((struct Agent **)addrShAgent));
-                //printf("NUMERO DANS MAIN %d !!!!!! %d \n",nbagents.nbAg,ag2[nbagents.nbAg].numero);
                 
                 //incrémenter et rattacher le nombre d'agnts
                 nbagents.nbAg++;
@@ -458,12 +443,12 @@ int main(int argc, const char * argv[])
     
     while (1){
         
+        
         sleep(1);
         //printf("avant traitement \n");
         traitementClientDeFile(NBAGENT);
         signal(SIGTSTP,supAllProc);
         signal(SIGINT,sigCreaCli);
-        
         
     }
     
@@ -481,34 +466,39 @@ void sigDeSig()
 void sigCreaCli()
 {
     
+    
+    
     //on est dans le fils et le pid est celui du prog principal
-    printf("dans signal ctrl+c %d \n", getpid());
-    if(fork()==0)
+    if(getpid()==(*(strucPidPartage*)addrPidMainProc).pid )
     {
-        sigset_t signauxBloques;
-        int  idSiglLock =sigemptyset(&signauxBloques);
-        sigaddset(&signauxBloques, 2);
-        sigprocmask(SIG_BLOCK, &signauxBloques,NULL);
         
-        int probleme, langue, tpsAppel, numero;
-        srand(time(NULL) ^ (getpid()<<16));
-        probleme=(rand() % 3) + 0;
-        srand(time(NULL) ^ (getpid()<<16));
-        langue=(rand() % 2) + 0;
-        srand(time(NULL) ^ (getpid()<<16));
-        tpsAppel=(rand() % 6) + 5;
-        numero=getpid();
         
-        printf("Le client  : %d vient d'arriver, pb : %d, langue : %d  \n",numero, probleme, langue);
-        
-        traitementClient(probleme,langue,tpsAppel,numero,NBAGENT);
-        
-        //signal(SIGINT,sigDeSig);
-        
+        if(fork()==0)
+        {
+            sigset_t signauxBloques;
+            int  idSiglLock =sigemptyset(&signauxBloques);
+            sigaddset(&signauxBloques, 2);
+            sigprocmask(SIG_BLOCK, &signauxBloques,NULL);
+            
+            int probleme, langue, tpsAppel, numero;
+            srand(time(NULL) ^ (getpid()<<16));
+            probleme=(rand() % 3) + 0;
+            srand(time(NULL) ^ (getpid()<<16));
+            langue=(rand() % 2) + 0;
+            srand(time(NULL) ^ (getpid()<<16));
+            tpsAppel=(rand() % 6) + 5;
+            numero=getpid();
+            
+            printf("Le client  : %d vient d'arriver, pb : %d, langue : %d  \n",numero, probleme, langue);
+            
+            traitementClient(probleme,langue,tpsAppel,numero,NBAGENT);
+            
+            //signal(SIGINT,sigDeSig);
+            
+            
+        }
         
     }
-    
-        
     
 }
 
