@@ -18,3 +18,5 @@ $(EXECUTABLE): $(OBJECTS)
 clean:
 	rm -rf *o
 	rm projet
+
+	
