@@ -2,9 +2,7 @@
 //  Agent.c
 //  LO41-Projet
 //
-//  Created by Ludovic Lardies on 25/05/13.
-//  Copyright (c) 2013 -. All rights reserved.
-//
+
 #include "agent.h"
 
 /*#####Mémoire partagé pour les client########*/
@@ -15,7 +13,7 @@ typedef struct
 }structNbClientsFile;
 
 //Le client en lui même
-void lireAgent()
+void lireAgent(int nbAgent)
 {
     char* grp;
     char* langu;
@@ -32,7 +30,7 @@ void lireAgent()
     ag=*(((struct Agent **)addrShAgent));
     
     //printf("NBAAG : %d \n ", nbAg);
-    for(i=0; i<6;++i)
+    for(i=0; i<nbAgent;++i)
     {
         printf("dans lire agent %d  \n", i);
         
@@ -97,7 +95,7 @@ void lireAgent()
     // shmdt(addrShNbCliFile);
 }
 
-int traitementClient(int probleme,int langue,int tpsAppel,int numero)
+int traitementClient(int probleme,int langue,int tpsAppel,int numero, int nbAgent)
 {
     
     if (( shIdCliFile= shmget(KEYCLIENFILE, sizeof(struct Client), 0777 | IPC_CREAT)) < 0)
@@ -130,7 +128,7 @@ int traitementClient(int probleme,int langue,int tpsAppel,int numero)
     
     //on test le client sur chaque agent
     
-    for(i=0; i<6; ++i)
+    for(i=0; i<nbAgent; ++i)
     {
         //SI la langue agent est Fr/an (2) ET agent tech(0) et agent dispo ca passe
         //SI langue agent anglais (1) ET langue du client anglais (1) ET agent tech(0) ET dispo ca passe
@@ -205,7 +203,7 @@ int traitementClient(int probleme,int langue,int tpsAppel,int numero)
 }
 
 
-void traitementClientDeFile()
+void traitementClientDeFile(int nbAgent)
 {
     
     if ((shIdNbCliFile= shmget(KEYNBCLIENFILE, sizeof(structNbClientsFile), 0777 | IPC_CREAT)) < 0)
@@ -234,7 +232,7 @@ void traitementClientDeFile()
         //on test pour chaque agent
         // int placeDansListe;
         
-        for(idx=0; idx<6;idx++)
+        for(idx=0; idx<nbAgent;idx++)
         {
             //ont test pour chaque client dans la file
             for(idx2=0;idx2<nbclientsFile.nb;++idx2)
@@ -307,7 +305,7 @@ void traitementClientDeFile()
                     ag[idx].dispo=1;
                     (*(struct Agent **)addrShAgent) = ag;
                     
-                    //                    /*--Tuer le processus processus client et débloquer l'agent une fois le temps passé..--*/
+                    //    /*--Tuer le processus processus client et débloquer l'agent une fois le temps passé..--*/
                     
                     
                     if(pidForKill>0)

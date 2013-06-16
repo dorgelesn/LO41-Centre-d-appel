@@ -2,9 +2,7 @@
 //  agent.h
 //  LO41-Projet
 //
-//  Created by Ludovic Lardies on 30/05/13.
-//  Copyright (c) 2013 -. All rights reserved.
-//
+
 
 #ifndef LO41_Projet_agent_h
 #define LO41_Projet_agent_h
@@ -57,9 +55,9 @@ int shIdNbCliFile;
 
 
 //Fontions
-void lireAgent();
+void lireAgent(int nbagent);
 //int traitementClient(struct Agent *ag, struct Client *cli);
-int traitementClient(int probleme,int langue,int tpsAppel,int numero);
-void traitementClientDeFile();
+int traitementClient(int probleme,int langue,int tpsAppel,int numero, int nbagent);
+void traitementClientDeFile(int nbagent);
 
 #endif

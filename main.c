@@ -2,9 +2,7 @@
 //  main.c
 //  LO41-Projet
 //
-//  Created by Ludovic Lardies on 24/05/13.
-//  Copyright (c) 2013 -. All rights reserved.
-//
+
 
 //#include <stdio.h>
 #include <pthread.h>
@@ -26,6 +24,9 @@
 //files
 #include "agent.h"
 #include "client.h"
+
+
+// pour definir le nombre d'agent
 #define NBAGENT 6
 
 #define SEMNOM "SemaphoreCreacli"
@@ -46,6 +47,12 @@ typedef struct
 }strucPidPartage;
 /*####FIN Mémoire partagé pour stocker pid du processus main##*/
 
+//l'agent en lui même
+void *addrShAgent[6];//pointeur sur l'adresse d'attachement du segment de mémoire partagée
+int shIdAgent;
+
+/*#####FIN mémoire partagé pour les agents######*/
+
 
 /*#####mémoire partagé pour les agents######*/
 //nombre d'agent
@@ -56,10 +63,7 @@ typedef struct
     int nbAg;
 }strucNbAg;
 
-//l'agent en lui même
-void *addrShAgent[6];//pointeur sur l'adresse d'attachement du segment de mémoire partagée
-int shIdAgent;
-/*#####FIN mémoire partagé pour les agents######*/
+
 
 #define mainPid getpid()
 
@@ -98,7 +102,7 @@ void supAllProc()
     (tabSemId2  = semget(cle2, 1, IPC_CREAT  | 0600));
     
     semctl(tabSemId2, IPC_RMID, NULL);
-
+    
     
     kill(getpid(), SIGKILL);
 }
@@ -109,10 +113,12 @@ int main(int argc, const char * argv[])
 {
     
     
+    printf("nb agents : %d \n", NBAGENT);
+    
     int pvInit[1];
     pvInit[0]=1;
     initSem(1,SEMNOM,pvInit);
-
+    
     
     
     /*-------pour pid du processus princiaple------*/
@@ -139,7 +145,7 @@ int main(int argc, const char * argv[])
     signal(SIGTSTP,supAllProc);
     /*########################################*/
     
-    
+       
     
     int iAg;
     int grpAg;
@@ -171,7 +177,7 @@ int main(int argc, const char * argv[])
     
     /*##################################################
      /*-----création de NB agents (nb processus)----*/
-    for (iAg=0; iAg<NBAGENT; ++iAg)
+    for (iAg=0; iAg< NBAGENT; ++iAg)
     {
         
         if(fork()==0)//on est dans le fils
@@ -185,7 +191,7 @@ int main(int argc, const char * argv[])
             sigaddset(&signauxBloques, 2);
             sigprocmask(SIG_BLOCK, &signauxBloques,NULL);
             
-             
+            
             
             int numberPid = getpid();
             int lastDigitPid = numberPid%10;
@@ -430,15 +436,20 @@ int main(int argc, const char * argv[])
     }
     /*###################################################*/
     
-    strucNbAg nBagents;
-    nBagents=*(((strucNbAg *)addrShNbAgent));
-    if(nBagents.nbAg==5)
+    
+    if(getpid()==sPP.pid)
     {
-        lireAgent();
         
+        strucNbAg nBagents;
+        nBagents=*(((strucNbAg *)addrShNbAgent));
+        if(nBagents.nbAg==5)
+        {
+            lireAgent(NBAGENT);
+            
+        }
     }
     
-   // shmdt(addrShCliFile);
+    // shmdt(addrShCliFile);
     shmdt(addrShNbAgent);
     shmdt(addrShNbAgent);
     
@@ -449,11 +460,11 @@ int main(int argc, const char * argv[])
         
         sleep(1);
         //printf("avant traitement \n");
-        traitementClientDeFile();
+        traitementClientDeFile(NBAGENT);
         signal(SIGTSTP,supAllProc);
         signal(SIGINT,sigCreaCli);
         
-
+        
     }
     
     return 0;
@@ -471,9 +482,10 @@ void sigCreaCli()
 {
     
     //on est dans le fils et le pid est celui du prog principal
-    printf("dans signal ctrl+c \n");
+    printf("dans signal ctrl+c %d \n", getpid());
     if(fork()==0)
-    {   sigset_t signauxBloques;
+    {
+        sigset_t signauxBloques;
         int  idSiglLock =sigemptyset(&signauxBloques);
         sigaddset(&signauxBloques, 2);
         sigprocmask(SIG_BLOCK, &signauxBloques,NULL);
@@ -489,12 +501,14 @@ void sigCreaCli()
         
         printf("Le client  : %d vient d'arriver, pb : %d, langue : %d  \n",numero, probleme, langue);
         
-        traitementClient(probleme,langue,tpsAppel,numero);
+        traitementClient(probleme,langue,tpsAppel,numero,NBAGENT);
         
-        signal(SIGINT,sigDeSig);
+        //signal(SIGINT,sigDeSig);
         
         
     }
+    
+        
     
 }
 
