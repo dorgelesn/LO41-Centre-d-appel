@@ -1,4 +1,4 @@
-#Projet de l'UV LO41 UTBM Prinetmps 2013
+#Projet de l'UV LO41 UTBM Printemps 2013
 
 Code testé et fonctionnel sous OpenIndiana 11
 
